@@ -123,7 +123,7 @@ SPOTIFY_SCOPES = [
 
 # Processing Engine Configuration
 # Set to True to use PySpark for data processing, False to use Pandas
-USE_PYSPARK = True  # Toggle between PySpark (True) and Pandas (False)
+USE_PYSPARK = False  # Toggle between PySpark (True) and Pandas (False)
 
 # PySpark Configuration (only used when USE_PYSPARK = True)
 PYSPARK_CONFIG = {
