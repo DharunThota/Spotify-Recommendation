@@ -46,6 +46,23 @@ MOOD_CRITERIA = {
     }
 }
 
+# Processing Engine Configuration
+# Set to True to use PySpark for data processing, False to use Pandas
+USE_PYSPARK = False  # Toggle between PySpark (True) and Pandas (False)
+
+# PySpark Configuration (only used when USE_PYSPARK = True)
+PYSPARK_CONFIG = {
+    "spark.app.name": "SpotifyRecommendation",
+    "spark.master": "local[*]",  # Use all available cores
+    "spark.driver.memory": "4g",
+    "spark.executor.memory": "4g",
+    "spark.sql.shuffle.partitions": "200",
+    "spark.local.dir": "/tmp/spark-temp",
+    "spark.ui.showConsoleProgress": "false",  # Disable progress bar in console
+    "spark.sql.adaptive.enabled": "true",  # Enable adaptive query execution
+    "spark.sql.adaptive.coalescePartitions.enabled": "true"
+}
+
 # Recommendation parameters
 N_RECOMMENDATIONS = 10
 MIN_SIMILARITY_THRESHOLD = 0.3

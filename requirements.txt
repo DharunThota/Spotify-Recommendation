@@ -8,3 +8,5 @@ python-multipart
 pydantic
 jinja2
 aiofiles
+pyspark>=3.3.0
+pyarrow>=11.0.0

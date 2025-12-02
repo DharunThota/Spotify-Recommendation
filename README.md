@@ -12,11 +12,14 @@ A comprehensive music recommendation system using big data algorithms, featuring
 
 ✅ **Explainable AI**: Every recommendation comes with human-readable explanations showing why songs were suggested
 
+✅ **Dual Processing Engines**: Toggle between **Pandas** (fast for small datasets) and **PySpark** (scalable for big data)
+
 ✅ **Big Data Algorithms**:
 - K-Means Clustering (75 clusters)
 - Cosine Similarity for content-based filtering
 - Feature engineering and normalization
 - Diversity filtering for varied recommendations
+- Distributed computing support via PySpark
 
 ## Project Structure
 
@@ -50,6 +53,21 @@ pip install -r requirements.txt
 
 2. **Verify data files are in the `data/` folder**
 
+3. **(Optional) Configure Processing Engine**
+
+Choose between Pandas and PySpark in `config.py`:
+
+```python
+USE_PYSPARK = False  # Set to True for PySpark, False for Pandas
+```
+
+For PySpark installation:
+```bash
+pip install pyspark
+```
+
+📖 **See [PYSPARK_GUIDE.md](PYSPARK_GUIDE.md) for detailed PySpark configuration**
+
 ## Usage
 
 ### 1. Initialize the System (First Run)
@@ -61,14 +79,22 @@ python data_processor.py
 ```
 
 This will:
-- Load all CSV files
+- Load all CSV files (using Pandas or PySpark based on config)
 - Normalize audio features
 - Extract mood classifications
 - Perform K-Means clustering
 - Create indexed lookup structures
-- Save processed data to `processed_data.pkl`
+- Save processed data to `processed_data.pkl` (Pandas) or `processed_data_pyspark.pkl` (PySpark)
 
-### 2. Start the FastAPI Server
+### 2. (Optional) Benchmark Performance
+
+Compare Pandas vs PySpark performance:
+
+```bash
+python benchmark.py
+```
+
+### 3. Start the FastAPI Server
 
 ```bash
 python main.py
