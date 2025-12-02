@@ -171,14 +171,16 @@
 
 .cta-button.secondary {
     background: white;
-    color: var(--text-primary);
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    color: #1DB954;
+    border: 2px solid #1DB954;
+    box-shadow: 0 4px 12px rgba(29, 185, 84, 0.15);
 }
 
 .cta-button.secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    background: #1DB954;
+    color: white;
+    box-shadow: 0 8px 20px rgba(29, 185, 84, 0.3);
     border-color: #1DB954;
 }
 
@@ -201,7 +203,15 @@
 }
 
 .cta-button.secondary:hover .button-icon {
-    transform: scale(1.1);
+    transform: scale(1.15);
+}
+
+.cta-button.primary .button-icon {
+    margin-left: 4px;
+}
+
+.cta-button.secondary .button-icon {
+    margin-right: 4px;
 }
 
 /* Stats Bar */
