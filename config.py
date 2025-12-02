@@ -46,6 +46,20 @@ MOOD_CRITERIA = {
     }
 }
 
+# Spotify API Configuration
+SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "your_client_id_here")
+SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET", "your_client_secret_here")
+SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/api/auth/callback")
+
+# Scopes required for user data access
+SPOTIFY_SCOPES = [
+    "user-read-recently-played",
+    "user-top-read",
+    "user-library-read",
+    "playlist-read-private",
+    "user-read-private"
+]
+
 # Processing Engine Configuration
 # Set to True to use PySpark for data processing, False to use Pandas
 USE_PYSPARK = False  # Toggle between PySpark (True) and Pandas (False)
