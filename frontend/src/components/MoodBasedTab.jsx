@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Smile, Wind, CloudRain, Zap, Heart, Brain, PartyPopper, CloudSnow } from 'lucide-react'
+import { Smile, Wind, CloudRain, Zap, Heart, Brain, PartyPopper, CloudSnow, Flame } from 'lucide-react'
 import SongCard from './SongCard'
 import SongModal from './SongModal'
 import { getMoodRecommendations } from '../services/api'
@@ -42,11 +42,16 @@ function MoodBasedTab() {
                 explanation: rec.explanation?.explanation
             }))
             
+            console.log(`Total recommendations for ${mood.id}:`, transformedRecs.length)
+            
             // Filter for popular songs if toggle is on
             if (isPopular) {
+                // Lower threshold to 40 to get more results
                 transformedRecs = transformedRecs.filter(song => 
-                    song.popularity && song.popularity >= 50
+                    song.popularity && song.popularity >= 40
                 ).sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+                
+                console.log(`After popular filter (>=40):`, transformedRecs.length)
             }
             
             setRecommendations(transformedRecs)

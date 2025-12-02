@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Smile, Wind, CloudRain, Zap, Heart, Brain, PartyPopper, CloudSnow } from 'lucide-react'
+import { Smile, Wind, CloudRain, Zap, Heart, Brain, PartyPopper, CloudSnow, Flame } from 'lucide-react'
 import SongSearch from './SongSearch'
 import SongCard from './SongCard'
 import SongModal from './SongModal'
@@ -69,11 +69,16 @@ function HybridTab() {
                 explanation: rec.explanation?.explanation
             }))
             
+            console.log(`Total hybrid recommendations:`, transformedRecs.length)
+            
             // Filter for popular songs if toggle is on
             if (popularOnly) {
+                // Lower threshold to 40 to get more results
                 transformedRecs = transformedRecs.filter(song => 
-                    song.popularity && song.popularity >= 50
+                    song.popularity && song.popularity >= 40
                 ).sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+                
+                console.log(`After popular filter (>=40):`, transformedRecs.length)
             }
             
             setRecommendations(transformedRecs)
