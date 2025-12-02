@@ -15,6 +15,7 @@ function HybridTab() {
     const [error, setError] = useState(null)
     const [popularOnly, setPopularOnly] = useState(false)
     const [modalSong, setModalSong] = useState(null)
+    const [displayCount, setDisplayCount] = useState(12)
 
     const moods = [
         { id: 'happy', label: 'Happy', icon: Smile },
@@ -48,13 +49,14 @@ function HybridTab() {
         setRecommendations([])
         setError(null)
         setIsLoading(true)
+        setDisplayCount(12)
 
         try {
             const songIds = selectedSongs.map(s => s.id)
             const data = await getHybridRecommendations(
                 songIds,
                 selectedMood?.id || null,
-                12
+                50
             )
             // Transform nested response structure to flat structure for SongCard
             let transformedRecs = data.recommendations.map(rec => ({
@@ -178,7 +180,7 @@ function HybridTab() {
                         )}
                     </h2>
                     <div className="recommendations-grid">
-                        {recommendations.map((rec, index) => (
+                        {recommendations.slice(0, displayCount).map((rec, index) => (
                             <SongCard 
                                 key={rec.id || index}
                                 song={rec}
@@ -186,6 +188,16 @@ function HybridTab() {
                             />
                         ))}
                     </div>
+                    {displayCount < recommendations.length && (
+                        <div className="load-more-container">
+                            <button 
+                                className="load-more-button"
+                                onClick={() => setDisplayCount(prev => Math.min(prev + 12, recommendations.length))}
+                            >
+                                Load More ({recommendations.length - displayCount} remaining)
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

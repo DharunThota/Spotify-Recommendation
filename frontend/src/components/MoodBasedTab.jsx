@@ -13,6 +13,7 @@ function MoodBasedTab() {
     const [error, setError] = useState(null)
     const [popularOnly, setPopularOnly] = useState(false)
     const [modalSong, setModalSong] = useState(null)
+    const [displayCount, setDisplayCount] = useState(12)
 
     const moods = [
         { id: 'happy', label: 'Happy', icon: Smile, color: '#FFD700' },
@@ -26,9 +27,10 @@ function MoodBasedTab() {
         setRecommendations([])
         setError(null)
         setIsLoading(true)
+        setDisplayCount(12)
 
         try {
-            const data = await getMoodRecommendations(mood.id, 12)
+            const data = await getMoodRecommendations(mood.id, 50)
             // Transform nested response structure to flat structure for SongCard
             let transformedRecs = data.recommendations.map(rec => ({
                 ...rec.song,
@@ -125,7 +127,7 @@ function MoodBasedTab() {
                         )}
                     </h2>
                     <div className="recommendations-grid">
-                        {recommendations.map((rec, index) => (
+                        {recommendations.slice(0, displayCount).map((rec, index) => (
                             <SongCard 
                                 key={rec.id || index}
                                 song={rec}
@@ -133,6 +135,16 @@ function MoodBasedTab() {
                             />
                         ))}
                     </div>
+                    {displayCount < recommendations.length && (
+                        <div className="load-more-container">
+                            <button 
+                                className="load-more-button"
+                                onClick={() => setDisplayCount(prev => Math.min(prev + 12, recommendations.length))}
+                            >
+                                Load More ({recommendations.length - displayCount} remaining)
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

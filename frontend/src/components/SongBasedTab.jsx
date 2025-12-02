@@ -11,15 +11,17 @@ function SongBasedTab() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
     const [modalSong, setModalSong] = useState(null)
+    const [displayCount, setDisplayCount] = useState(12)
 
     const handleSongSelect = async (song) => {
         setSelectedSong(song)
         setRecommendations([])
         setError(null)
         setIsLoading(true)
+        setDisplayCount(12)
 
         try {
-            const data = await getSongRecommendations(song.id, 10)
+            const data = await getSongRecommendations(song.id, 50)
             // Transform nested response structure to flat structure for SongCard
             const transformedRecs = data.recommendations.map(rec => ({
                 ...rec.song,
@@ -75,7 +77,7 @@ function SongBasedTab() {
                         <span className="count-badge">{recommendations.length}</span>
                     </h2>
                     <div className="recommendations-grid">
-                        {recommendations.map((rec, index) => (
+                        {recommendations.slice(0, displayCount).map((rec, index) => (
                             <SongCard 
                                 key={rec.id || index}
                                 song={rec}
@@ -83,6 +85,16 @@ function SongBasedTab() {
                             />
                         ))}
                     </div>
+                    {displayCount < recommendations.length && (
+                        <div className="load-more-container">
+                            <button 
+                                className="load-more-button"
+                                onClick={() => setDisplayCount(prev => Math.min(prev + 12, recommendations.length))}
+                            >
+                                Load More ({recommendations.length - displayCount} remaining)
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
