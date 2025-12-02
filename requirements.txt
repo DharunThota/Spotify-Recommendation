@@ -8,5 +8,9 @@ python-multipart
 pydantic
 jinja2
 aiofiles
+python-dotenv
 pyspark>=3.3.0
 pyarrow>=11.0.0
+spotipy>=2.23.0
+mlxtend>=0.22.0
+plotly>=5.18.0
