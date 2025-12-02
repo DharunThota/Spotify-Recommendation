@@ -377,6 +377,7 @@ async def recommend_by_mood(request: MoodRecommendationRequest):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error in mood recommendation: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

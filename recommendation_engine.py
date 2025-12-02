@@ -155,9 +155,6 @@ class RecommendationEngine:
             logger.warning(f"No songs found for mood: {mood}")
             return []
         
-        # Get mood songs data
-        mood_songs = self.processor.data.iloc[mood_indices].copy()
-        
         # Calculate mood match score based on how well song fits mood criteria
         mood_scores = []
         for idx in mood_indices:
@@ -169,8 +166,12 @@ class RecommendationEngine:
             
             # Factor in popularity if requested
             if include_popular:
-                popularity_factor = 1.0 + (song['popularity'] / 100.0)
-                mood_score *= popularity_factor
+                try:
+                    popularity = float(song['popularity']) if song['popularity'] is not None else 0.0
+                    popularity_factor = 1.0 + (popularity / 100.0)
+                    mood_score *= popularity_factor
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid popularity value for song idx {idx}: {song.get('popularity')}")
             
             mood_scores.append((idx, mood_score))
         
@@ -243,7 +244,11 @@ class RecommendationEngine:
         
         for feature, (min_val, max_val) in criteria.items():
             if feature in song:
-                value = song[feature]
+                try:
+                    value = float(song[feature]) if song[feature] is not None else 0.0
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid value for feature {feature}: {song.get(feature)}")
+                    continue
                 
                 # Calculate how well value fits in range
                 range_size = max_val - min_val
