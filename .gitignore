@@ -18,9 +18,23 @@ build/
 .vscode/
 .idea/
 
+# Environment variables (IMPORTANT!)
+.env
+.env.local
+
+# Spotify cache files
+.spotify_cache*
+.cache-*
+
 # Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/package-lock.json
+frontend/.env
+frontend/.env.local
 .dist/
+
+# Backup files
+*_old.css
+*_backup.*
