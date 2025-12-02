@@ -1,22 +1,104 @@
 .mood-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
 }
 
-.mood-button {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 32px 24px;
+/* Toggle Switch for Popular Songs */
+.section-header-with-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
     cursor: pointer;
-    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+}
+
+.toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    background: #e0e0e0;
+    border-radius: 50px;
+    transition: all var(--transition-base);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+    background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color var(--transition-base);
+}
+
+.toggle-switch input[type="checkbox"]:checked ~ .toggle-label {
+    color: #1DB954;
+}
+
+.toggle-icon {
+    font-size: 1.1rem;
+}
+
+.toggle-switch:hover .toggle-slider {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(29, 185, 84, 0.1);
+}
+
+
+.mood-button {
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    cursor: pointer;
+    transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: var(--spacing-md);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .mood-button::before {
@@ -26,44 +108,75 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, var(--mood-color), transparent);
+    background: radial-gradient(circle at center, var(--mood-color) 0%, transparent 70%);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--transition-base) ease;
+}
+
+.mood-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--mood-color), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--transition-base);
 }
 
 .mood-button:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--mood-color);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
 .mood-button:hover::before {
-    opacity: 0.1;
+    opacity: 0.05;
+}
+
+.mood-button:hover::after {
+    opacity: 0.3;
 }
 
 .mood-button.active {
-    background: var(--card-hover);
+    background: linear-gradient(135deg, white 0%, rgba(99, 102, 241, 0.02) 100%);
     border-color: var(--mood-color);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(99, 102, 241, 0.1);
+    transform: scale(1.05);
 }
 
 .mood-button.active::before {
-    opacity: 0.15;
+    opacity: 0.08;
+}
+
+.mood-button.active::after {
+    opacity: 0.6;
 }
 
 .mood-emoji {
-    font-size: 2.5rem;
-    transition: transform 0.2s ease;
+    font-size: 3rem;
+    transition: all var(--transition-base) ease;
     position: relative;
     z-index: 1;
+    filter: grayscale(0.2) brightness(0.95);
 }
 
 .mood-button:hover .mood-emoji {
-    transform: scale(1.1);
+    transform: scale(1.15) rotate(5deg);
+    filter: grayscale(0) brightness(1);
 }
 
 .mood-button.active .mood-emoji {
-    transform: scale(1.15);
+    transform: scale(1.2);
+    filter: grayscale(0) brightness(1.05);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1.2); }
+    50% { transform: scale(1.25); }
 }
 
 .mood-label {
@@ -72,23 +185,45 @@
     color: var(--text-primary);
     position: relative;
     z-index: 1;
+    letter-spacing: -0.02em;
+}
+
+.mood-button:hover .mood-label {
+    font-weight: 700;
 }
 
 .mood-button.active .mood-label {
     color: var(--mood-color);
+    font-weight: 800;
+    font-size: 1.05rem;
 }
 
 @media (max-width: 768px) {
     .mood-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
+        gap: var(--spacing-sm);
     }
     
     .mood-button {
-        padding: 25px 15px;
+        padding: var(--spacing-lg) var(--spacing-md);
     }
     
     .mood-emoji {
-        font-size: 2.5rem;
+        font-size: 2.25rem;
+    }
+    
+    .mood-label {
+        font-size: 0.9rem;
+    }
+    
+    .section-header-with-toggle {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .toggle-switch {
+        width: 100%;
+        justify-content: space-between;
+        padding: var(--spacing-sm) 0;
     }
 }

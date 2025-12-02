@@ -9,6 +9,7 @@ function MoodBasedTab() {
     const [recommendations, setRecommendations] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [popularOnly, setPopularOnly] = useState(false)
 
     const moods = [
         { id: 'happy', label: 'Happy', emoji: '😊', color: '#FFD700' },
@@ -17,7 +18,7 @@ function MoodBasedTab() {
         { id: 'energetic', label: 'Energetic', emoji: '⚡', color: '#FF6347' }
     ]
 
-    const handleMoodSelect = async (mood) => {
+    const handleMoodSelect = async (mood, isPopular = popularOnly) => {
         setSelectedMood(mood)
         setRecommendations([])
         setError(null)
@@ -26,11 +27,19 @@ function MoodBasedTab() {
         try {
             const data = await getMoodRecommendations(mood.id, 12)
             // Transform nested response structure to flat structure for SongCard
-            const transformedRecs = data.recommendations.map(rec => ({
+            let transformedRecs = data.recommendations.map(rec => ({
                 ...rec.song,
                 similarity_score: rec.score,
                 explanation: rec.explanation?.explanation_text || rec.explanation?.text
             }))
+            
+            // Filter for popular songs if toggle is on
+            if (isPopular) {
+                transformedRecs = transformedRecs.filter(song => 
+                    song.popularity && song.popularity >= 50
+                ).sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+            }
+            
             setRecommendations(transformedRecs)
         } catch (err) {
             console.error('Error fetching mood recommendations:', err)
@@ -46,10 +55,31 @@ function MoodBasedTab() {
         }
     }
 
+    const handleTogglePopular = (checked) => {
+        setPopularOnly(checked)
+        if (selectedMood) {
+            handleMoodSelect(selectedMood, checked)
+        }
+    }
+
     return (
         <div className="tab-container">
             <div className="section">
-                <h2 className="section-title">Select Your Mood</h2>
+                <div className="section-header-with-toggle">
+                    <h2 className="section-title">Select Your Mood</h2>
+                    <label className="toggle-switch">
+                        <input
+                            type="checkbox"
+                            checked={popularOnly}
+                            onChange={(e) => handleTogglePopular(e.target.checked)}
+                        />
+                        <span className="toggle-slider"></span>
+                        <span className="toggle-label">
+                            <span className="toggle-icon">🔥</span>
+                            Popular Only
+                        </span>
+                    </label>
+                </div>
                 <div className="mood-grid">
                     {moods.map(mood => (
                         <button
@@ -82,6 +112,12 @@ function MoodBasedTab() {
                     <h2 className="section-title">
                         {selectedMood?.emoji} {selectedMood?.label} Songs
                         <span className="count-badge">{recommendations.length}</span>
+                        {popularOnly && (
+                            <span className="popular-badge">
+                                <span className="popular-badge-icon">🔥</span>
+                                Popular
+                            </span>
+                        )}
                     </h2>
                     <div className="recommendations-grid">
                         {recommendations.map((rec, index) => (
