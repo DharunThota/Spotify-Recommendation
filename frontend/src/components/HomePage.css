@@ -11,6 +11,7 @@
     min-height: 90vh;
     display: flex;
     align-items: center;
+    /* justify-content: center; */
     padding: var(--spacing-2xl) var(--spacing-lg);
     overflow: hidden;
 }
@@ -44,6 +45,7 @@
     position: relative;
     z-index: 2;
     animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-left: 10%;
 }
 
 @keyframes slideUp {
@@ -388,6 +390,9 @@
     transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .feature-card::before {
@@ -430,6 +435,7 @@
     line-height: 1.7;
     color: var(--text-secondary);
     margin-bottom: var(--spacing-lg);
+    flex-grow: 1;
 }
 
 .feature-link {
@@ -439,6 +445,7 @@
     display: inline-flex;
     align-items: center;
     transition: transform var(--transition-base);
+    margin-top: auto;
 }
 
 .feature-card:hover .feature-link {
@@ -453,7 +460,7 @@
 
 .steps-container {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     gap: var(--spacing-lg);
     max-width: 1200px;
@@ -464,12 +471,15 @@
 .step-card {
     flex: 1;
     min-width: 250px;
+    max-width: 350px;
     background: white;
     padding: var(--spacing-2xl);
     border-radius: 20px;
     text-align: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
 }
 
 .step-card:hover {
@@ -504,6 +514,7 @@
     font-size: 0.95rem;
     line-height: 1.6;
     color: var(--text-secondary);
+    flex-grow: 1;
 }
 
 .step-connector {
@@ -512,6 +523,8 @@
     background: linear-gradient(90deg, #1DB954 0%, var(--primary) 100%);
     border-radius: var(--radius-full);
     position: relative;
+    flex-shrink: 0;
+    align-self: center;
 }
 
 .step-connector::after {
