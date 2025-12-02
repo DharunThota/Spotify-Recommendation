@@ -49,10 +49,11 @@ function AnalyticsPage() {
         try {
             setCheckingAuth(true)
             
-            // Check localStorage first
+            // Check localStorage first - if nothing there, show connect screen
             const authData = localStorage.getItem('spotify_auth')
             if (!authData) {
                 setCheckingAuth(false)
+                setLoading(false)
                 return
             }
             
@@ -61,10 +62,11 @@ function AnalyticsPage() {
             if (Date.now() - parsed.timestamp > 3600000) {
                 localStorage.removeItem('spotify_auth')
                 setCheckingAuth(false)
+                setLoading(false)
                 return
             }
             
-            // Verify with server
+            // Verify with server - only if localStorage exists
             const response = await fetch('http://localhost:8000/api/analytics/check-auth')
             const data = await response.json()
             
@@ -77,11 +79,14 @@ function AnalyticsPage() {
                 loadDashboard('medium_term')
                 loadWrappedInsights('medium_term')
             } else {
+                // Server says not authenticated, clear localStorage
                 localStorage.removeItem('spotify_auth')
+                setLoading(false)
             }
         } catch (error) {
             console.error('Error checking auth status:', error)
             localStorage.removeItem('spotify_auth')
+            setLoading(false)
         } finally {
             setCheckingAuth(false)
         }
