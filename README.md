@@ -28,10 +28,19 @@ ASBD/
 │   ├── data_by_genres.csv         # Genre aggregated data
 │   ├── data_by_year.csv           # Year aggregated data
 │   └── data_w_genres.csv          # Songs with genre information
-├── static/                        # Frontend files
-│   ├── index.html                 # Main UI
-│   ├── style.css                  # Styling
-│   └── script.js                  # Frontend logic
+├── frontend/                      # React Frontend (NEW!)
+│   ├── src/
+│   │   ├── components/            # React components
+│   │   ├── services/              # API integration
+│   │   ├── App.jsx                # Main app
+│   │   └── main.jsx               # Entry point
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+├── static/                        # Legacy vanilla JS frontend
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
 ├── config.py                      # Configuration settings
 ├── data_processor.py              # Data loading and preprocessing
 ├── recommendation_engine.py       # Recommendation algorithms
@@ -43,12 +52,26 @@ ASBD/
 
 ## Installation
 
-1. **Install dependencies**:
+### Backend Setup
+
+1. **Install Python dependencies**:
 ```bash
 pip install -r requirements.txt
 ```
 
 2. **Verify data files are in the `data/` folder**
+
+### Frontend Setup (React)
+
+1. **Navigate to frontend directory**:
+```bash
+cd frontend
+```
+
+2. **Install Node.js dependencies**:
+```bash
+npm install
+```
 
 ## Usage
 
@@ -68,7 +91,7 @@ This will:
 - Create indexed lookup structures
 - Save processed data to `processed_data.pkl`
 
-### 2. Start the FastAPI Server
+### 2. Start the FastAPI Backend
 
 ```bash
 python main.py
@@ -80,10 +103,25 @@ Or with uvicorn:
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Access the Application
+### 3. Start the React Frontend (in a new terminal)
 
-- **Web Interface**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+```bash
+cd frontend
+npm run dev
+```
+
+### 4. Access the Application
+
+**Option 1: React Frontend (Recommended)**
+- **Modern UI**: http://localhost:3000
+- Clean, responsive React interface with better UX
+
+**Option 2: Legacy Vanilla JS Frontend**
+- **Basic UI**: http://localhost:8000
+- Simple HTML/CSS/JS interface
+
+**API Documentation**
+- **Swagger UI**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/api/health
 
 ## API Endpoints

@@ -1,0 +1,94 @@
+.mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.mood-button {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 32px 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.mood-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--mood-color), transparent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.mood-button:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--mood-color);
+}
+
+.mood-button:hover::before {
+    opacity: 0.1;
+}
+
+.mood-button.active {
+    background: var(--card-hover);
+    border-color: var(--mood-color);
+    box-shadow: var(--shadow-md);
+}
+
+.mood-button.active::before {
+    opacity: 0.15;
+}
+
+.mood-emoji {
+    font-size: 2.5rem;
+    transition: transform 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.mood-button:hover .mood-emoji {
+    transform: scale(1.1);
+}
+
+.mood-button.active .mood-emoji {
+    transform: scale(1.15);
+}
+
+.mood-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    position: relative;
+    z-index: 1;
+}
+
+.mood-button.active .mood-label {
+    color: var(--mood-color);
+}
+
+@media (max-width: 768px) {
+    .mood-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .mood-button {
+        padding: 25px 15px;
+    }
+    
+    .mood-emoji {
+        font-size: 2.5rem;
+    }
+}

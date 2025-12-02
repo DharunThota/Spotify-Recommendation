@@ -1,0 +1,85 @@
+.selected-songs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.mood-filter {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mood-filter-button {
+    padding: 10px 20px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mood-filter-button:hover:not(.active) {
+    background: var(--card-hover);
+    border-color: var(--accent-purple);
+    color: var(--text-primary);
+}
+
+.mood-filter-button.active {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow-md);
+}
+
+.mood-emoji-small {
+    font-size: 1.1rem;
+}
+
+.get-recommendations-button {
+    width: 100%;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, var(--spotify-green), var(--accent-purple));
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-md);
+    letter-spacing: 0.02em;
+}
+
+.get-recommendations-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.get-recommendations-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 768px) {
+    .selected-songs-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mood-filter {
+        justify-content: center;
+    }
+    
+    .mood-filter-button {
+        flex: 1;
+        min-width: 140px;
+        justify-content: center;
+    }
+}
