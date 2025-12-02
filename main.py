@@ -9,6 +9,10 @@ from typing import List, Optional
 import uvicorn
 import os
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -20,6 +24,7 @@ logger = logging.getLogger(__name__)
 from data_processor import create_data_processor
 from recommendation_engine import RecommendationEngine
 from explainability import ExplainabilityEngine
+from spotify_analytics import SpotifyAnalytics
 import config
 
 
@@ -83,7 +88,7 @@ class MoodRecommendationRequest(BaseModel):
 
 
 class HybridRecommendationRequest(BaseModel):
-    song_ids: List[str] = Field(..., min_items=1, description="List of song IDs")
+    song_ids: List[str] = Field(..., min_length=1, description="List of song IDs")
     mood: Optional[str] = Field(None, description="Optional mood filter")
     n_recommendations: int = Field(10, ge=1, le=50, description="Number of recommendations")
 
@@ -132,12 +137,13 @@ app.add_middleware(
 processor = None
 rec_engine = None
 explainer = None
+analytics_engine = None
 
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize the recommendation system on startup."""
-    global processor, rec_engine, explainer
+    global processor, rec_engine, explainer, analytics_engine
     
     logger.info("Initializing recommendation system...")
     logger.info(f"Using {'PySpark' if config.USE_PYSPARK else 'Pandas'} for data processing")
@@ -147,6 +153,7 @@ async def startup_event():
     
     rec_engine = RecommendationEngine(processor)
     explainer = ExplainabilityEngine(processor, rec_engine)
+    analytics_engine = SpotifyAnalytics()
     
     logger.info("Recommendation system ready!")
 
@@ -495,6 +502,189 @@ async def get_available_moods():
         "moods": list(config.MOOD_CRITERIA.keys()),
         "criteria": config.MOOD_CRITERIA
     }
+
+
+# ================== SPOTIFY ANALYTICS ENDPOINTS ==================
+
+@app.get("/api/analytics/auth-url")
+async def get_spotify_auth_url():
+    """Get Spotify OAuth authorization URL."""
+    try:
+        auth_manager = analytics_engine.get_auth_manager()
+        auth_url = auth_manager.get_authorize_url()
+        return {"auth_url": auth_url}
+    except Exception as e:
+        logger.error(f"Error generating auth URL: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/auth/callback")
+async def spotify_callback(code: str):
+    """Handle Spotify OAuth callback."""
+    try:
+        auth_manager = analytics_engine.get_auth_manager()
+        token_info = auth_manager.get_access_token(code)
+        
+        # Authenticate with the token
+        result = analytics_engine.authenticate(token_info)
+        
+        if result['success']:
+            # Redirect to analytics page with success
+            return HTMLResponse(content=f"""
+                <html>
+                    <head>
+                        <title>Spotify Authentication</title>
+                        <script>
+                            window.opener.postMessage({{
+                                type: 'spotify_auth_success',
+                                user_id: '{result['user_id']}',
+                                display_name: '{result['display_name']}'
+                            }}, '*');
+                            window.close();
+                        </script>
+                    </head>
+                    <body>
+                        <h1>Authentication Successful!</h1>
+                        <p>You can close this window.</p>
+                    </body>
+                </html>
+            """)
+        else:
+            raise HTTPException(status_code=400, detail=result.get('error', 'Authentication failed'))
+            
+    except Exception as e:
+        logger.error(f"Error in callback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/dashboard")
+async def get_analytics_dashboard(
+    time_range: str = Query('medium_term', pattern='^(short_term|medium_term|long_term)$')
+):
+    """Get comprehensive analytics dashboard for authenticated user."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(
+                status_code=401,
+                detail="Not authenticated. Please authenticate with Spotify first."
+            )
+        
+        dashboard = analytics_engine.get_comprehensive_dashboard(time_range)
+        return sanitize_for_json(dashboard)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/top-tracks")
+async def get_top_tracks(
+    time_range: str = Query('medium_term', pattern='^(short_term|medium_term|long_term)$'),
+    limit: int = Query(20, ge=1, le=50)
+):
+    """Get user's top tracks."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        tracks = analytics_engine.get_top_tracks(time_range, limit)
+        return sanitize_for_json(tracks)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching top tracks: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/top-artists")
+async def get_top_artists(
+    time_range: str = Query('medium_term', pattern='^(short_term|medium_term|long_term)$'),
+    limit: int = Query(20, ge=1, le=50)
+):
+    """Get user's top artists."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        artists = analytics_engine.get_top_artists(time_range, limit)
+        return sanitize_for_json(artists)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching top artists: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/listening-patterns")
+async def get_listening_patterns(limit: int = Query(50, ge=10, le=100)):
+    """Analyze user's listening patterns."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        tracks = analytics_engine.get_recently_played(limit)
+        analysis = analytics_engine.analyze_listening_patterns(tracks)
+        
+        return sanitize_for_json(analysis)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing patterns: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/associations")
+async def get_association_mining(
+    limit: int = Query(50, ge=10, le=100),
+    min_support: float = Query(0.15, ge=0.01, le=0.5),
+    min_confidence: float = Query(0.6, ge=0.1, le=1.0)
+):
+    """Perform association rule mining on user's listening history."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        tracks = analytics_engine.get_recently_played(limit)
+        associations = analytics_engine.perform_association_mining(
+            tracks,
+            min_support,
+            min_confidence
+        )
+        
+        return sanitize_for_json(associations)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in association mining: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/visualizations")
+async def get_visualizations(
+    time_range: str = Query('medium_term', pattern='^(short_term|medium_term|long_term)$')
+):
+    """Get visualization data for analytics dashboard."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        tracks = analytics_engine.get_top_tracks(time_range, 50)
+        analysis = analytics_engine.analyze_listening_patterns(tracks)
+        visualizations = analytics_engine.generate_visualizations(analysis)
+        
+        return visualizations
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating visualizations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Mount static files
