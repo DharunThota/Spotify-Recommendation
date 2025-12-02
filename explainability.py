@@ -4,6 +4,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Optional
 import config
 import logging
+from sequence_mining import SequentialPatternMiner
 
 logger = logging.getLogger(__name__)
 
@@ -434,6 +435,99 @@ class ExplainabilityEngine:
         parts.append("Users who enjoy similar combinations often love this track.")
         
         return ' '.join(parts)
+    
+    def _generate_hybrid_explanation(
+        self,
+        recommended_song: Dict,
+        content_score: float,
+        seq_explanation: Dict,
+        context_indices: List[int]
+    ) -> str:
+        """Generate natural language explanation for hybrid recommendation."""
+        parts = []
+        
+        # Sequence pattern part
+        if seq_explanation.get("explanation_text"):
+            parts.append(seq_explanation["explanation_text"])
+        
+        # Content similarity part
+        if content_score > 0.7:
+            if context_indices:
+                context_song = self.processor.get_song_by_index(context_indices[-1])
+                parts.append(
+                    f"Also musically similar to '{context_song['name']}' "
+                    f"({int(content_score * 100)}% match in audio features)."
+                )
+        elif content_score > 0.5:
+            parts.append("Shares similar musical characteristics with your recent selections.")
+        
+        # Default if no specific patterns
+        if not parts:
+            parts.append(
+                f"'{recommended_song['name']}' by {recommended_song['artists']} "
+                f"matches your listening patterns and musical preferences."
+            )
+        
+        return ' '.join(parts)
+    
+    def explain_sequence_recommendation(
+        self,
+        recommended_idx: int,
+        context_song_indices: List[int],
+        sequence_miner,  # SequentialPatternMiner
+        content_score: float = 0.0,
+        sequence_score: float = 0.0
+    ) -> Dict:
+        """
+        Generate explanation for sequence-based recommendation.
+        
+        Args:
+            recommended_idx: Index of recommended song
+            context_song_indices: Indices of context songs (recent listening history)
+            sequence_miner: SequentialPatternMiner with patterns
+            content_score: Content-based similarity score
+            sequence_score: Sequence pattern score
+            
+        Returns:
+            Dict with combined explanation (content + sequence)
+        """
+        recommended_song = self.processor.get_song_by_index(recommended_idx)
+        
+        # Get song IDs for sequence explanation
+        recommended_id = recommended_song['id']
+        context_song_ids = [
+            self.processor.get_song_by_index(idx)['id'] 
+            for idx in context_song_indices
+        ]
+        
+        # Get sequence pattern explanation
+        seq_explanation = sequence_miner.get_pattern_explanation(
+            recommended_id,
+            context_song_ids
+        )
+        
+        # Build combined explanation
+        explanation = {
+            "recommended_song": {
+                "name": recommended_song['name'],
+                "artist": recommended_song['artists'],
+                "id": recommended_id
+            },
+            "content_score": float(content_score),
+            "sequence_score": float(sequence_score),
+            "combined_score": float(content_score + sequence_score) / 2,
+            "sequence_pattern": seq_explanation.get("pattern"),
+            "pattern_support": seq_explanation.get("support", 0.0),
+            "pattern_confidence": seq_explanation.get("confidence", 0.0),
+            "explanation": self._generate_hybrid_explanation(
+                recommended_song,
+                content_score,
+                seq_explanation,
+                context_song_indices
+            )
+        }
+        
+        return explanation
 
 
 if __name__ == "__main__":
@@ -458,3 +552,4 @@ if __name__ == "__main__":
         print(f"\nRecommendation: {explanation['recommended_song']['name']}")
         print(f"Explanation: {explanation['explanation']}")
         print(f"Similarity: {explanation['similarity_score']:.2f}")
+    

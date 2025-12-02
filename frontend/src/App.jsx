@@ -9,6 +9,7 @@ import TabNavigation from './components/TabNavigation'
 import SongBasedTab from './components/SongBasedTab'
 import MoodBasedTab from './components/MoodBasedTab'
 import HybridTab from './components/HybridTab'
+import SequenceBasedTab from './components/SequenceBasedTab'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home')
@@ -53,6 +54,7 @@ function App() {
                   {activeTab === 'song' && <SongBasedTab />}
                   {activeTab === 'mood' && <MoodBasedTab />}
                   {activeTab === 'hybrid' && <HybridTab />}
+                  {activeTab === 'sequence' && <SequenceBasedTab />}
                 </div>
               </div>
             </div>

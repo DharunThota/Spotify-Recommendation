@@ -10,22 +10,32 @@ import './AnalyticsPage.css'
 
 function AnalyticsPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)  // Start as true to check auth first
     const [userData, setUserData] = useState(null)
     const [dashboard, setDashboard] = useState(null)
     const [wrappedInsights, setWrappedInsights] = useState(null)
     const [activeTimeRange, setActiveTimeRange] = useState('medium_term')
     const [associations, setAssociations] = useState(null)
+    const [checkingAuth, setCheckingAuth] = useState(true)  // New state for auth check
 
     useEffect(() => {
+        // Check for existing authentication on mount
+        checkAuthStatus()
+        
         // Listen for authentication success from popup
         const handleMessage = (event) => {
             if (event.data.type === 'spotify_auth_success') {
-                setIsAuthenticated(true)
-                setUserData({
+                const userData = {
                     user_id: event.data.user_id,
                     display_name: event.data.display_name
-                })
+                }
+                setIsAuthenticated(true)
+                setUserData(userData)
+                // Store in localStorage for persistence
+                localStorage.setItem('spotify_auth', JSON.stringify({
+                    authenticated: true,
+                    timestamp: Date.now()
+                }))
                 loadDashboard('medium_term')
                 loadWrappedInsights('medium_term')
             }
@@ -34,6 +44,48 @@ function AnalyticsPage() {
         window.addEventListener('message', handleMessage)
         return () => window.removeEventListener('message', handleMessage)
     }, [])
+
+    const checkAuthStatus = async () => {
+        try {
+            setCheckingAuth(true)
+            
+            // Check localStorage first
+            const authData = localStorage.getItem('spotify_auth')
+            if (!authData) {
+                setCheckingAuth(false)
+                return
+            }
+            
+            const parsed = JSON.parse(authData)
+            // Check if auth is less than 1 hour old
+            if (Date.now() - parsed.timestamp > 3600000) {
+                localStorage.removeItem('spotify_auth')
+                setCheckingAuth(false)
+                return
+            }
+            
+            // Verify with server
+            const response = await fetch('http://localhost:8000/api/analytics/check-auth')
+            const data = await response.json()
+            
+            if (data.authenticated) {
+                setIsAuthenticated(true)
+                setUserData({
+                    user_id: data.user_id,
+                    display_name: data.display_name
+                })
+                loadDashboard('medium_term')
+                loadWrappedInsights('medium_term')
+            } else {
+                localStorage.removeItem('spotify_auth')
+            }
+        } catch (error) {
+            console.error('Error checking auth status:', error)
+            localStorage.removeItem('spotify_auth')
+        } finally {
+            setCheckingAuth(false)
+        }
+    }
 
     const handleSpotifyLogin = async () => {
         try {
@@ -121,6 +173,18 @@ function AnalyticsPage() {
     }
 
     const COLORS = ['#1DB954', '#1ed760', '#169c46', '#117a37', '#0d5c29', '#1DB954', '#1ed760', '#169c46', '#117a37', '#0d5c29']
+
+    // Show loading spinner while checking authentication
+    if (checkingAuth) {
+        return (
+            <div className="analytics-page">
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>Checking authentication...</p>
+                </div>
+            </div>
+        )
+    }
 
     // Prepare chart data
     const getAudioFeaturesChartData = () => {

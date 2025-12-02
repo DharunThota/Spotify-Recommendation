@@ -41,6 +41,16 @@ export const getHybridRecommendations = async (songIds, mood = null, numRecommen
     return response.data
 }
 
+export const getSequenceAwareRecommendations = async (songId, recentContext = [], sequenceWeight = 0.3, numRecommendations = 10) => {
+    const response = await api.post('/api/recommend/sequence-aware', {
+        song_id: songId,
+        recent_context: recentContext,
+        sequence_weight: sequenceWeight,
+        n_recommendations: numRecommendations
+    })
+    return response.data
+}
+
 // Analytics API calls
 export const getWrappedInsights = async (timeRange = 'medium_term') => {
     const response = await api.get('/api/analytics/wrapped-insights', {

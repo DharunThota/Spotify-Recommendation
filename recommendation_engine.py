@@ -6,6 +6,7 @@ from typing import List, Dict, Tuple, Optional
 import random
 import config
 import logging
+from sequence_mining import SequentialPatternMiner
 
 logger = logging.getLogger(__name__)
 
@@ -345,6 +346,87 @@ class RecommendationEngine:
         results.sort(key=lambda x: x[1], reverse=True)
         
         return results[:n_recommendations]
+    
+    def sequence_aware_recommendations(
+        self,
+        current_songs: List[int],  # Song indices
+        sequence_miner: Optional[SequentialPatternMiner] = None,
+        num_recommendations: int = 10,
+        sequence_weight: float = 0.3  # Weight for sequence vs content-based
+    ) -> List[Tuple[int, float]]:
+        """
+        Hybrid recommendations combining content-based and sequential pattern mining.
+        
+        Args:
+            current_songs: List of song indices (recent listening history)
+            sequence_miner: SequentialPatternMiner instance with patterns
+            num_recommendations: Number of recommendations to return
+            sequence_weight: Weight for sequence score (0-1), content gets (1-weight)
+            
+        Returns:
+            List of (song_index, combined_score) tuples
+        """
+        if not current_songs:
+            logger.warning("No current songs provided for sequence-aware recommendations")
+            return []
+        
+        # Convert indices to song IDs for hybrid method
+        current_song_ids = [
+            self.processor.get_song_by_index(idx)['id'] 
+            for idx in current_songs
+        ]
+        
+        # Get content-based recommendations using hybrid method
+        content_recs = self.hybrid_recommendations(
+            current_song_ids,
+            n_recommendations=num_recommendations * 3  # Get more for merging
+        )
+        
+        # If no sequence miner provided, return pure content-based
+        if not sequence_miner or not sequence_miner.patterns:
+            logger.info("No sequence patterns available, using pure content-based recommendations")
+            return content_recs[:num_recommendations]
+        
+        # Get sequence-based predictions (current_song_ids already computed above)
+        sequence_predictions = sequence_miner.predict_next_songs(
+            current_song_ids,
+            top_k=num_recommendations * 2
+        )
+        
+        # Convert sequence predictions to indices and scores
+        sequence_recs_dict = {}
+        for song_id, seq_score in sequence_predictions:
+            song = self.processor.get_song_by_id(song_id)
+            if song is not None and 'index' in song:
+                idx = song['index']
+                # Don't recommend songs already in current_songs
+                if idx not in current_songs:
+                    sequence_recs_dict[idx] = seq_score
+        
+        # Build content-based dict for easier merging
+        content_recs_dict = {idx: score for idx, score in content_recs}
+        
+        # Merge recommendations with weighted scoring
+        merged_scores = {}
+        all_indices = set(content_recs_dict.keys()) | set(sequence_recs_dict.keys())
+        
+        for idx in all_indices:
+            content_score = content_recs_dict.get(idx, 0.0)
+            sequence_score = sequence_recs_dict.get(idx, 0.0)
+            
+            # Normalize scores (they may be in different ranges)
+            # Content scores are typically 0-1, sequence scores are 0-1
+            combined_score = (1 - sequence_weight) * content_score + sequence_weight * sequence_score
+            
+            # Bonus if song appears in both recommendation types
+            if idx in content_recs_dict and idx in sequence_recs_dict:
+                combined_score *= 1.2  # 20% boost for consensus
+            
+            merged_scores[idx] = combined_score
+        
+        # Sort by combined score and return top-k
+        ranked = sorted(merged_scores.items(), key=lambda x: x[1], reverse=True)
+        return ranked[:num_recommendations]
 
 
 if __name__ == "__main__":

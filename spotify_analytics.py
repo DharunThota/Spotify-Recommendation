@@ -12,7 +12,9 @@ from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
 import plotly.graph_objects as go
 import plotly.express as px
+import os
 import config
+from sequence_mining import SequentialPatternMiner
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ class SpotifyAnalytics:
         self.cache_path = cache_path
         self.sp = None
         self.user_id = None
+        self.sequence_miner = None
         
     def get_auth_manager(self):
         """Get Spotify OAuth manager."""
@@ -1015,3 +1018,86 @@ class SpotifyAnalytics:
         return recommendations if recommendations else [
             "Keep exploring! We'll provide better insights as you listen to more music."
         ]
+    
+    def get_listening_sequences(self, time_range: str = 'medium_term') -> List[List[str]]:
+        """
+        Extract listening sequences from recently played data.
+        Groups songs by session (30-min gap = new session).
+        
+        Args:
+            time_range: Time range for data ('short_term', 'medium_term', 'long_term')
+            
+        Returns:
+            List of sequences where each sequence is list of song IDs
+        """
+        try:
+            # Get recently played tracks (max 50 from API)
+            recent_tracks = self.get_recently_played(limit=50)
+            
+            if not recent_tracks:
+                logger.warning("No recently played tracks available")
+                return []
+            
+            # SequentialPatternMiner will handle session extraction
+            return recent_tracks
+            
+        except Exception as e:
+            logger.error(f"Error extracting listening sequences: {str(e)}")
+            return []
+    
+    def mine_listening_patterns(self, force_refresh: bool = False) -> Optional[SequentialPatternMiner]:
+        """
+        Mine sequential patterns from user's listening history.
+        
+        Args:
+            force_refresh: If True, re-mine patterns even if cache exists
+            
+        Returns:
+            SequentialPatternMiner instance with mined patterns
+        """
+        try:
+            # Try to load from cache first
+            if not force_refresh and os.path.exists(config.SEQUENCE_CACHE_FILE):
+                logger.info(f"Loading sequence patterns from cache: {config.SEQUENCE_CACHE_FILE}")
+                miner = SequentialPatternMiner(
+                    min_support=config.SEQUENCE_MIN_SUPPORT,
+                    max_gap=config.SEQUENCE_MAX_GAP,
+                    session_gap_minutes=config.SEQUENCE_SESSION_GAP_MINUTES
+                )
+                miner.load(config.SEQUENCE_CACHE_FILE)
+                self.sequence_miner = miner
+                return miner
+            
+            # Get listening history
+            logger.info("Mining new sequential patterns from listening history")
+            listening_history = self.get_recently_played(limit=50)
+            
+            if not listening_history:
+                logger.warning("No listening history available for pattern mining")
+                return None
+            
+            # Initialize and fit miner
+            miner = SequentialPatternMiner(
+                min_support=config.SEQUENCE_MIN_SUPPORT,
+                max_gap=config.SEQUENCE_MAX_GAP,
+                session_gap_minutes=config.SEQUENCE_SESSION_GAP_MINUTES
+            )
+            
+            miner.fit(listening_history)
+            
+            # Save to cache
+            miner.save(config.SEQUENCE_CACHE_FILE)
+            
+            self.sequence_miner = miner
+            return miner
+            
+        except Exception as e:
+            logger.error(f"Error mining listening patterns: {str(e)}")
+            return None
+    
+    def get_sequence_statistics(self) -> Dict:
+        """Get statistics about mined sequential patterns."""
+        if not self.sequence_miner:
+            return {"error": "No patterns mined yet. Call mine_listening_patterns() first."}
+        
+        return self.sequence_miner.get_statistics()

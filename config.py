@@ -1,6 +1,10 @@
 """Configuration settings for the recommendation system."""
 
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -85,6 +89,13 @@ DIVERSITY_FACTOR = 0.7  # Balance between similarity and diversity
 # Clustering parameters
 N_CLUSTERS = 75
 RANDOM_STATE = 42
+
+# Sequential Pattern Mining Configuration
+SEQUENCE_MIN_SUPPORT = 0.3  # Minimum pattern frequency (0-1)
+SEQUENCE_MAX_GAP = 2  # Maximum gap between items in sequence
+SEQUENCE_SESSION_GAP_MINUTES = 30  # Time gap to consider new session
+SEQUENCE_WEIGHT = 0.3  # Weight in hybrid scoring (0-1)
+SEQUENCE_CACHE_FILE = os.path.join(DATA_DIR, "processed_sequences.pkl")
 
 # API settings
 API_HOST = "0.0.0.0"

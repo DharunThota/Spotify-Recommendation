@@ -93,6 +93,13 @@ class HybridRecommendationRequest(BaseModel):
     n_recommendations: int = Field(10, ge=1, le=50, description="Number of recommendations")
 
 
+class SequenceRecommendationRequest(BaseModel):
+    song_id: str = Field(..., description="Current song ID")
+    recent_context: List[str] = Field([], description="Recently played song IDs for sequence mining")
+    sequence_weight: float = Field(0.3, ge=0.0, le=1.0, description="Weight for sequence patterns vs audio features")
+    n_recommendations: int = Field(10, ge=1, le=50, description="Number of recommendations")
+
+
 class SongResponse(BaseModel):
     id: str
     name: str
@@ -156,6 +163,7 @@ async def startup_event():
     analytics_engine = SpotifyAnalytics()
     
     logger.info("Recommendation system ready!")
+    logger.info(f"RecommendationEngine methods: {[m for m in dir(rec_engine) if not m.startswith('_')]}")
 
 
 @app.on_event("shutdown")
@@ -470,6 +478,197 @@ async def recommend_hybrid(request: HybridRecommendationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/recommend/sequence-aware", response_model=RecommendationListResponse)
+async def recommend_sequence_aware(request: SequenceRecommendationRequest):
+    """
+    Get sequence-aware recommendations combining content-based and collaborative filtering.
+    Uses listening patterns from recent_context to predict next songs.
+    
+    - **song_id**: Current/seed song ID
+    - **recent_context**: List of recently played song IDs for sequence mining
+    - **sequence_weight**: Balance between sequence patterns (collaborative) and audio features (content-based)
+    - **n_recommendations**: Number of recommendations to return
+    """
+    try:
+        logger.info(f"Sequence-aware recommendation: song_id={request.song_id}, context={len(request.recent_context)} songs, weight={request.sequence_weight}")
+        
+        # Convert song_id to index
+        input_song_idx = processor.song_id_to_idx.get(request.song_id)
+        if input_song_idx is None:
+            raise HTTPException(status_code=404, detail="Song not found in dataset")
+        
+        # Build context indices from recent_context
+        context_indices = []
+        
+        # Add recent context songs first (in order)
+        for song_id in request.recent_context:
+            idx = processor.song_id_to_idx.get(song_id)
+            if idx is not None and idx != input_song_idx:
+                context_indices.append(idx)
+        
+        # Add current song at the end
+        context_indices.append(input_song_idx)
+        
+        logger.info(f"Context indices: {len(context_indices)} songs (current song + {len(request.recent_context)} context)")
+        
+        # Create a temporary sequence miner if we have enough context
+        sequence_miner = None
+        if len(context_indices) >= 3:  # Need at least 3 songs to mine meaningful patterns
+            try:
+                from sequence_mining import SequentialPatternMiner
+                from collections import Counter
+                import pandas as pd
+                
+                sequence_miner = SequentialPatternMiner(
+                    min_support=0.1,  # Very low threshold for small context
+                    max_gap=3,
+                    session_gap_minutes=30
+                )
+                
+                # Convert indices to song IDs
+                context_song_ids = [processor.get_song_by_index(idx)['id'] for idx in context_indices]
+                
+                # Instead of mining from single session, create multiple synthetic sessions
+                # by treating different subsequences as separate sessions
+                # This allows PrefixSpan to find patterns with proper support
+                session_records = []
+                session_counter = 0
+                
+                # Create overlapping sessions from the context
+                for i in range(len(context_song_ids)):
+                    for j in range(i + 2, min(i + 5, len(context_song_ids) + 1)):
+                        subsequence = context_song_ids[i:j]
+                        if len(subsequence) >= 2:
+                            for k, song_id in enumerate(subsequence):
+                                session_records.append({
+                                    'session_id': f'session_{session_counter}',
+                                    'song_id': song_id,
+                                    'played_at': pd.Timestamp.now() + pd.Timedelta(minutes=k)
+                                })
+                            session_counter += 1
+                
+                # Also add the full sequence as a session
+                for k, song_id in enumerate(context_song_ids):
+                    session_records.append({
+                        'session_id': 'full_context',
+                        'song_id': song_id,
+                        'played_at': pd.Timestamp.now() + pd.Timedelta(minutes=k)
+                    })
+                
+                if len(session_records) >= 4:  # Need at least 2 sessions with 2 songs each
+                    # fit() expects list of dicts with 'id' and 'played_at'
+                    # But our records have 'song_id', so we need to rename or adjust
+                    listening_history = [{'id': rec['song_id'], 'played_at': rec['played_at']} 
+                                        for rec in session_records]
+                    sequence_miner.fit(listening_history)
+                    logger.info(f"Created {session_counter + 1} synthetic sessions, mined {len(sequence_miner.patterns)} patterns")
+                else:
+                    logger.info(f"Not enough context ({len(context_song_ids)} songs) to mine patterns")
+                    sequence_miner = None
+            except Exception as e:
+                logger.warning(f"Could not mine patterns from context: {e}", exc_info=True)
+                sequence_miner = None
+        
+        # Get sequence-aware recommendations
+        if sequence_miner and sequence_miner.patterns:
+            logger.info(f"Using sequence-aware recommendations with weight={request.sequence_weight}")
+            recommendations = rec_engine.sequence_aware_recommendations(
+                context_indices,
+                sequence_miner=sequence_miner,
+                num_recommendations=request.n_recommendations,
+                sequence_weight=request.sequence_weight
+            )
+        # else:
+        #     # Fallback to hybrid recommendations if no patterns
+        #     logger.info("Using hybrid recommendations (no patterns available)")
+        #     # Convert indices to song IDs for hybrid method
+        #     context_song_ids = [processor.get_song_by_index(idx)['id'] for idx in context_indices]
+        #     recommendations = rec_engine.hybrid_recommendations(
+        #         context_song_ids,
+        #         n_recommendations=request.n_recommendations
+        #     )
+        
+        logger.info(f"Received {len(recommendations) if recommendations else 0} recommendations from engine")
+        
+        if not recommendations:
+            logger.warning(f"No recommendations generated for context")
+            raise HTTPException(status_code=404, detail="No recommendations available")
+        
+        logger.info(f"Generated {len(recommendations)} sequence-aware recommendations")
+        
+        # Build response with explanations
+        response_list = []
+        
+        for idx, score in recommendations:
+            song = processor.get_song_by_index(idx)
+            
+            # Get explanation
+            if sequence_miner and sequence_miner.patterns:
+                try:
+                    explanation = explainer.explain_sequence_recommendation(
+                        recommended_idx=idx,
+                        context_song_indices=context_indices,
+                        sequence_miner=sequence_miner,
+                        content_score=score * (1 - request.sequence_weight),  # Approximate content portion
+                        sequence_score=score * request.sequence_weight  # Approximate sequence portion
+                    )
+                except Exception as e:
+                    logger.warning(f"Could not generate sequence explanation: {e}")
+                    explanation = explainer.explain_song_recommendation(request.song_id, idx)
+            else:
+                # Fallback to regular song-based explanation
+                explanation = explainer.explain_song_recommendation(request.song_id, idx)
+            
+            # Sanitize explanation for JSON serialization
+            explanation = sanitize_for_json(explanation)
+            
+            song_response = SongResponse(
+                id=str(song['id']),
+                name=str(song['name']),
+                artists=str(song['artists']),
+                year=int(song['year']),
+                popularity=int(song['popularity']),
+                valence=safe_convert(song['valence'], float),
+                energy=safe_convert(song['energy'], float),
+                danceability=safe_convert(song['danceability'], float)
+            )
+            
+            response_list.append(RecommendationResponse(
+                song=song_response,
+                score=safe_convert(score, float),
+                explanation=explanation
+            ))
+        
+        # Get input songs info (all context songs)
+        input_songs_response = []
+        for idx in context_indices[:3]:  # Show up to 3 context songs
+            song = processor.get_song_by_index(idx)
+            if song is not None:
+                input_songs_response.append(SongResponse(
+                    id=str(song['id']),
+                    name=str(song['name']),
+                    artists=str(song['artists']),
+                    year=int(song['year']),
+                    popularity=int(song['popularity']),
+                    valence=safe_convert(song['valence'], float),
+                    energy=safe_convert(song['energy'], float),
+                    danceability=safe_convert(song['danceability'], float)
+                ))
+        
+        return RecommendationListResponse(
+            recommendations=response_list,
+            input_songs=input_songs_response,
+            mood=None,
+            total_count=len(response_list)
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in sequence-aware recommendations: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/song/{song_id}", response_model=SongResponse)
 async def get_song_details(song_id: str):
     """Get detailed information about a specific song."""
@@ -506,6 +705,38 @@ async def get_available_moods():
 
 
 # ================== SPOTIFY ANALYTICS ENDPOINTS ==================
+
+@app.get("/api/analytics/check-auth")
+async def check_auth_status():
+    """Check if user is authenticated (has valid cached token)."""
+    try:
+        auth_manager = analytics_engine.get_auth_manager()
+        token_info = auth_manager.get_cached_token()
+        
+        if token_info and not auth_manager.is_token_expired(token_info):
+            # Re-authenticate with cached token if not already authenticated
+            if not analytics_engine.sp:
+                result = analytics_engine.authenticate(token_info)
+                if result['success']:
+                    return {
+                        "authenticated": True,
+                        "user_id": result['user_id'],
+                        "display_name": result['display_name']
+                    }
+            else:
+                # Already authenticated
+                user_profile = analytics_engine.sp.current_user()
+                return {
+                    "authenticated": True,
+                    "user_id": analytics_engine.user_id,
+                    "display_name": user_profile.get('display_name', 'User')
+                }
+        
+        return {"authenticated": False}
+    except Exception as e:
+        logger.error(f"Error checking auth status: {str(e)}")
+        return {"authenticated": False}
+
 
 @app.get("/api/analytics/auth-url")
 async def get_spotify_auth_url():
