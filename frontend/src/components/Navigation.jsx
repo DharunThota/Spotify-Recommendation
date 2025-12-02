@@ -31,7 +31,10 @@ function Navigation({ currentPage, onNavigate }) {
                         <span className="nav-icon">🎵</span>
                         <span>Discover</span>
                     </button>
-                    <button className="nav-link">
+                    <button 
+                        className={`nav-link ${currentPage === 'analytics' ? 'active' : ''}`}
+                        onClick={() => onNavigate('analytics')}
+                    >
                         <span className="nav-icon">📊</span>
                         <span>Analytics</span>
                     </button>

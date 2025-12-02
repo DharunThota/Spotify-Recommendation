@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import './App.css'
 import Navigation from './components/Navigation'
 import HomePage from './components/HomePage'
+import AnalyticsPage from './components/AnalyticsPage'
 import Header from './components/Header'
 import TabNavigation from './components/TabNavigation'
 import SongBasedTab from './components/SongBasedTab'
@@ -23,6 +24,8 @@ function App() {
       <div className="app">
         {currentPage === 'home' ? (
           <HomePage onGetStarted={handleGetStarted} />
+        ) : currentPage === 'analytics' ? (
+          <AnalyticsPage />
         ) : (
           <div className="container">
             <Header />
