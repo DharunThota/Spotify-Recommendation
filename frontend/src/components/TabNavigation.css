@@ -1,57 +1,121 @@
 .tab-navigation {
     display: flex;
-    gap: 12px;
-    background: var(--card-bg);
-    padding: 6px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    margin-bottom: 32px;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(29, 185, 84, 0.08);
+    animation: fadeIn 0.4s ease-out 0.2s both;
+    position: sticky;
+    top: 90px;
 }
 
 .tab-button {
-    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px 24px;
+    gap: var(--spacing-md);
+    padding: 14px var(--spacing-lg);
     border: none;
     background: transparent;
     color: var(--text-secondary);
     font-size: 0.95rem;
-    font-weight: 500;
-    border-radius: var(--radius-md);
+    font-weight: 600;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.tab-button::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 60%;
+    background: linear-gradient(180deg, #1DB954 0%, #1ed760 100%);
+    border-radius: 0 4px 4px 0;
+    transition: width var(--transition-base);
 }
 
 .tab-button:hover:not(.active) {
-    background: var(--card-hover);
+    background: rgba(29, 185, 84, 0.05);
     color: var(--text-primary);
+    transform: translateX(4px);
+}
+
+.tab-button:hover:not(.active)::before {
+    width: 4px;
 }
 
 .tab-button.active {
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-    color: white;
-    box-shadow: var(--shadow-md);
+    background: linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(30, 215, 96, 0.1) 100%);
+    color: #1DB954;
+    font-weight: 700;
+}
+
+.tab-button.active::before {
+    width: 4px;
 }
 
 .tab-icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    transition: transform var(--transition-fast);
+    min-width: 24px;
+    text-align: center;
+}
+
+.tab-button:hover .tab-icon {
+    transform: scale(1.1);
+}
+
+.tab-button.active .tab-icon {
+    transform: scale(1.1);
 }
 
 .tab-label {
-    font-weight: 500;
+    font-weight: inherit;
+    letter-spacing: -0.01em;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .tab-navigation {
-        flex-direction: column;
-        gap: 8px;
+        position: static;
+        flex-direction: row;
+        padding: var(--spacing-md);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    
+    .tab-navigation::-webkit-scrollbar {
+        display: none;
     }
     
     .tab-button {
-        padding: 12px 20px;
+        white-space: nowrap;
+    }
+    
+    .tab-button::before {
+        left: 50%;
+        top: auto;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 0;
+    }
+    
+    .tab-button:hover:not(.active)::before {
+        width: 60%;
+        height: 3px;
+    }
+    
+    .tab-button.active::before {
+        width: 60%;
+        height: 3px;
     }
 }

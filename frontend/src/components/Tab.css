@@ -1,11 +1,11 @@
 .tab-container {
-    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(12px);
     }
     to {
         opacity: 1;
@@ -14,50 +14,91 @@
 }
 
 .section {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 24px;
-    margin-bottom: 24px;
+    background: white;
+    border: 1px solid rgba(29, 185, 84, 0.08);
+    border-radius: 20px;
+    padding: var(--spacing-2xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: visible;
+}
+
+.section:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 800;
     color: var(--text-primary);
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-lg);
     display: flex;
     align-items: center;
-    gap: 10px;
-    letter-spacing: -0.01em;
+    gap: var(--spacing-md);
+    letter-spacing: -0.03em;
+}
+
+.section-title::before {
+    content: '';
+    width: 5px;
+    height: 28px;
+    background: linear-gradient(180deg, #1DB954 0%, #1ed760 100%);
+    border-radius: var(--radius-full);
 }
 
 .count-badge {
-    background: var(--card-hover);
-    color: var(--spotify-green);
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    box-shadow: 0 2px 8px rgba(29, 185, 84, 0.25);
+    letter-spacing: 0.02em;
 }
 
 .recommendations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--spacing-xl);
 }
+
+/* Popular Badge for Song Cards */
+.popular-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.popular-badge-icon {
+    font-size: 0.9rem;
+}
+
 
 @media (max-width: 768px) {
     .section {
-        padding: 18px;
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
     }
     
     .section-title {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
+        margin-bottom: var(--spacing-md);
     }
     
     .recommendations-grid {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
 }
