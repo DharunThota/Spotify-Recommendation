@@ -18,6 +18,7 @@ build/
 .vscode/
 .idea/
 .github/
+dump/
 
 # Environment variables (IMPORTANT!)
 .env
