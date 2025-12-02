@@ -740,10 +740,29 @@ function AnalyticsPage() {
                         </div>
                     </div>
 
+                    {/* Audio Features Info Banner - Show if unavailable */}
+                    {dashboard.listening_patterns && dashboard.listening_patterns.has_audio_features === false && (
+                        <div className="section-card full-width">
+                            <div className="info-banner">
+                                <div className="info-icon-wrapper">
+                                    <span className="info-icon-large">ℹ️</span>
+                                </div>
+                                <div className="info-content">
+                                    <h2 className="info-title">Audio Features Unavailable</h2>
+                                    <p className="info-message">
+                                        Spotify has deprecated their audio features API endpoint, so detailed audio analysis 
+                                        (energy, valence, danceability, etc.) is no longer available. You can still view your 
+                                        top tracks, artists, listening patterns, and get recommendations!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Visualizations Row */}
                     <div className="charts-row">
-                        {/* Music Personality Radar Chart
-                        {dashboard.listening_patterns?.audio_features && dashboard.listening_patterns?.has_audio_features ? (
+                        {/* Music Personality Radar Chart - Only show if features available
+                        {dashboard.listening_patterns?.has_audio_features === true && getAudioFeaturesChartData().length > 0 && (
                             <div className="section-card chart-card">
                                 <h2 className="section-title">
                                     <span className="title-icon">🎨</span>
@@ -771,18 +790,7 @@ function AnalyticsPage() {
                                     </RadarChart>
                                 </ResponsiveContainer>
                             </div>
-                        ) : dashboard.listening_patterns && !dashboard.listening_patterns.has_audio_features ? (
-                            <div className="section-card info-card">
-                                <h2 className="section-title">
-                                    <span className="title-icon">ℹ️</span>
-                                    Audio Features Unavailable
-                                </h2>
-                                <p className="info-message">
-                                    Audio feature analysis is currently unavailable due to Spotify API limitations.
-                                    You can still view your top tracks, artists, and listening patterns below!
-                                </p>
-                            </div>
-                        ) : null} */}
+                        )} */}
 
                         {/* Genre Distribution Pie Chart */}
                         {getGenreDistribution().length > 0 && (

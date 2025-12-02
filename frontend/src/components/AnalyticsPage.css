@@ -761,6 +761,50 @@
     font-size: 1rem;
 }
 
+/* Info Banner - Enhanced Layout */
+.info-banner {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem 2.5rem;
+    background: linear-gradient(135deg, rgba(29, 185, 84, 0.05) 0%, rgba(30, 215, 96, 0.02) 100%);
+    border: 2px solid rgba(29, 185, 84, 0.15);
+    border-radius: 16px;
+}
+
+.info-icon-wrapper {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(29, 185, 84, 0.1);
+    border-radius: 50%;
+}
+
+.info-icon-large {
+    font-size: 2.5rem;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #181818;
+    margin: 0 0 0.5rem 0;
+}
+
+.info-banner .info-message {
+    color: #666;
+    line-height: 1.6;
+    font-size: 1rem;
+    margin: 0;
+}
+
 /* Artists Grid */
 .artists-grid {
     display: grid;

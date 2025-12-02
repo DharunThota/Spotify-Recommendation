@@ -147,52 +147,30 @@ class SpotifyAnalytics:
             raise
     
     def get_audio_features_batch(self, track_ids: List[str]) -> List[Dict]:
-        """Get audio features for multiple tracks."""
+        """Get audio features for multiple tracks.
+        
+        Note: Spotify has deprecated the audio_features endpoint.
+        This method now returns empty features with a warning.
+        """
         if not self.sp:
+            logger.error("Cannot fetch audio features: Not authenticated")
             raise Exception("Not authenticated. Please authenticate first.")
         
-        try:
-            # Spotify API allows max 100 tracks per request
-            all_features = []
-            for i in range(0, len(track_ids), 100):
-                batch = track_ids[i:i+100]
-                try:
-                    features = self.sp.audio_features(batch)
-                    all_features.extend([f for f in features if f is not None])
-                except Exception as api_error:
-                    # Audio features endpoint may not be available
-                    logger.warning(f"Audio features unavailable: {str(api_error)}")
-                    # Return empty features for unavailable tracks
-                    for track_id in batch:
-                        all_features.append({
-                            'id': track_id,
-                            'valence': None,
-                            'energy': None,
-                            'danceability': None,
-                            'acousticness': None,
-                            'instrumentalness': None,
-                            'liveness': None,
-                            'speechiness': None,
-                            'tempo': None,
-                            'loudness': None
-                        })
-            
-            return all_features
-        except Exception as e:
-            logger.error(f"Error fetching audio features: {str(e)}")
-            # Return empty features dict to allow analysis to continue
-            return [{
-                'id': tid,
-                'valence': None,
-                'energy': None,
-                'danceability': None,
-                'acousticness': None,
-                'instrumentalness': None,
-                'liveness': None,
-                'speechiness': None,
-                'tempo': None,
-                'loudness': None
-            } for tid in track_ids]
+        logger.warning(f"Audio features endpoint has been deprecated by Spotify. Returning empty features for {len(track_ids)} tracks.")
+        
+        # Return empty features since Spotify deprecated the endpoint
+        return [{
+            'id': tid,
+            'valence': None,
+            'energy': None,
+            'danceability': None,
+            'acousticness': None,
+            'instrumentalness': None,
+            'liveness': None,
+            'speechiness': None,
+            'tempo': None,
+            'loudness': None
+        } for tid in track_ids]
     
     def analyze_listening_patterns(self, tracks: List[Dict]) -> Dict:
         """Analyze listening patterns from track data."""
