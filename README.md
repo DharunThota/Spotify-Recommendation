@@ -242,7 +242,7 @@ The system uses Spotify's dataset with:
 
 ## License
 
-This project is for educational purposes as part of Advanced Software for Big Data course.
+This project is for educational purposes as part of Analytics and Systems of Big Data course.
 
 ## Acknowledgments
 
