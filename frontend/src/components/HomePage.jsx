@@ -2,7 +2,7 @@ import React from 'react'
 import { Music2, Heart, Sparkles, ArrowRight, Play, Music, Headphones, Star } from 'lucide-react'
 import './HomePage.css'
 
-function HomePage({ onGetStarted }) {
+function HomePage({ onGetStarted, onNavigate }) {
     const features = [
         {
             icon: Music2,
@@ -111,7 +111,14 @@ function HomePage({ onGetStarted }) {
                                 </div>
                                 <h3 className="feature-title">{feature.title}</h3>
                                 <p className="feature-description">{feature.description}</p>
-                                <div className="feature-link">
+                                <div 
+                                    className="feature-link" 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log('Learn more clicked, navigating to about');
+                                        onNavigate && onNavigate('about');
+                                    }}
+                                >
                                     Learn more <ArrowRight size={16} className="inline" />
                                 </div>
                             </div>

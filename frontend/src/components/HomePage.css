@@ -130,9 +130,17 @@
     font-weight: 700;
     cursor: pointer;
     transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
+    border: none !important;
+    outline: none !important;
     position: relative;
     overflow: hidden;
+}
+
+.cta-button:focus,
+.cta-button:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: 0 12px 32px rgba(29, 185, 84, 0.4);
 }
 
 .cta-button.primary {
@@ -448,6 +456,7 @@
     align-items: center;
     transition: transform var(--transition-base);
     margin-top: auto;
+    cursor: pointer;
 }
 
 .feature-card:hover .feature-link {
