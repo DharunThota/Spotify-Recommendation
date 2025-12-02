@@ -38,6 +38,12 @@ npm run dev
 
 **Hybrid Recommendations**: Combine multiple songs with optional mood filtering for personalized playlists
 
+**Sequential Pattern Mining**: Prefix-based algorithm for listening history analysis:
+- PrefixSpan algorithm for discovering frequent song sequences
+- Predicts next songs based on recent listening patterns
+- Combines sequential patterns with content-based filtering
+- Configurable support thresholds and sequence gaps
+
 **Spotify Analytics Integration**: Connect your Spotify account to view:
 - Top tracks and artists analysis
 - Listening history insights
@@ -60,6 +66,7 @@ npm run dev
 **Advanced Big Data Algorithms**:
 - K-Means Clustering (75 clusters) for efficient candidate selection
 - Cosine Similarity for content-based filtering
+- PrefixSpan Sequential Pattern Mining for listening history analysis
 - Weighted feature scoring with Gaussian-like distribution
 - Cluster-based diversity filtering for sonic variety
 - Artist diversity penalties to avoid repetition
@@ -76,7 +83,7 @@ ASBD/
 │   ├── data_by_genres.csv         # Genre aggregated data
 │   ├── data_by_year.csv           # Year aggregated data
 │   └── data_w_genres.csv          # Songs with genre information
-├── frontend/                      # React Frontend (NEW!)
+├── frontend/                      # React Frontend 
 │   ├── src/
 │   │   ├── components/            # React components
 │   │   ├── services/              # API integration
@@ -85,14 +92,16 @@ ASBD/
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
-├── static/                        # Legacy vanilla JS frontend
+├── static/                        # vanilla JS frontend
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
 ├── config.py                      # Configuration settings
 ├── data_processor.py              # Data loading and preprocessing
 ├── recommendation_engine.py       # Recommendation algorithms
+├── sequence_mining.py             # Sequential pattern mining (PrefixSpan)
 ├── explainability.py              # Explanation generation
+├── spotify_analytics.py           # Spotify API integration
 ├── main.py                        # FastAPI backend
 ├── requirements.txt               # Python dependencies
 └── README.md                      # This file
@@ -232,6 +241,17 @@ Body: {
 }
 ```
 
+### Sequence-Aware Recommendations (Sequential Pattern Mining)
+```
+POST /api/recommend/sequence-aware
+Body: {
+  "song_id": "current_song_id",
+  "recent_context": ["recent_song_id1", "recent_song_id2", ...],
+  "sequence_weight": 0.3,
+  "n_recommendations": 10
+}
+```
+
 ### Spotify Analytics (OAuth Required)
 ```
 GET /api/auth/login          # Initiate Spotify OAuth
@@ -277,13 +297,21 @@ Each mood uses weighted features where more important characteristics have highe
 - Different feature weights per mood (e.g., valence weighted 2.0x for happy mood)
 - Normalized scoring across all features
 
-### 6. Cluster-Based Diversity
+### 6. Sequential Pattern Mining (PrefixSpan)
+- Discovers frequent song sequences from listening history
+- Uses prefix-based pattern growth algorithm
+- Configurable minimum support threshold (default: 0.3)
+- Session-based sequence extraction (30-minute gap threshold)
+- Predicts next songs based on current listening context
+- Hybrid scoring: combines sequence patterns (30%) with content similarity (70%)
+
+### 7. Cluster-Based Diversity
 - Round-robin selection from different clusters
 - Ensures sonic variety within same mood
 - Prevents recommendation monotony
 - Maintains audio feature diversity
 
-### 7. Explainability
+### 8. Explainability
 Generates explanations by:
 - Analyzing feature similarities between songs
 - Finding common attributes (artists, era, mode, key)
@@ -309,8 +337,10 @@ Generates explanations by:
 ### Algorithms
 - **K-Means Clustering**: Groups songs into 75 clusters based on audio features
 - **Cosine Similarity**: Measures similarity between song feature vectors
+- **PrefixSpan**: Sequential pattern mining algorithm for listening history analysis
 - **Content-Based Filtering**: Recommends based on song characteristics
 - **Diversity Filtering**: Ensures varied recommendations across artists and clusters
+- **Hybrid Scoring**: Combines multiple recommendation signals (content, sequence, mood)
 
 ### Performance Optimizations
 - Pre-computed normalized feature vectors
@@ -381,6 +411,13 @@ Edit `config.py` to customize:
 - `MOOD_CRITERIA`: Feature ranges for each of 8 moods (6 features per mood)
 - `MOOD_FEATURE_WEIGHTS`: Importance weights for each feature per mood
 
+### Sequential Pattern Mining
+- `SEQUENCE_MIN_SUPPORT`: Minimum pattern frequency (0.0-1.0, default: 0.3)
+- `SEQUENCE_MAX_GAP`: Maximum gap between items in sequence (default: 2)
+- `SEQUENCE_SESSION_GAP_MINUTES`: Time gap to consider new session (default: 30)
+- `SEQUENCE_WEIGHT`: Weight in hybrid scoring (0.0-1.0, default: 0.3)
+- `SEQUENCE_CACHE_FILE`: Path to cached sequence patterns
+
 ### Processing Engine
 - `USE_PYSPARK`: Toggle between Pandas (False) and PySpark (True)
 - `PYSPARK_CONFIG`: Spark configuration (memory, cores, etc.)
@@ -446,7 +483,6 @@ for rec in recommendations['recommendations']:
 
 ## Future Enhancements
 
-- Sequential pattern mining for listening history
 - Collaborative filtering with user similarity
 - Playlist generation and Spotify export
 - Advanced visualization dashboards
