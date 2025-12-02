@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Recommendation System</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Spotify Recommendation System</h1>
+            <p class="subtitle">Discover music with AI-powered recommendations and explanations</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('song-based')">Song-Based</button>
+            <button class="tab-button" onclick="switchTab('mood-based')">Mood-Based</button>
+            <button class="tab-button" onclick="switchTab('hybrid')">Hybrid</button>
+        </div>
+
+        <!-- Song-Based Recommendations -->
+        <div id="song-based" class="tab-content active">
+            <div class="section">
+                <h2>Song-Based Recommendations</h2>
+                <p>Find similar songs based on a song you love</p>
+                
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="song-search" 
+                        placeholder="Search for a song or artist..."
+                        onkeyup="searchSongs(event)"
+                    >
+                    <div id="search-results" class="search-results"></div>
+                </div>
+
+                <div id="selected-song" class="selected-song"></div>
+
+                <div class="controls">
+                    <label>
+                        Number of recommendations:
+                        <input type="number" id="song-n-recs" value="10" min="1" max="50">
+                    </label>
+                    <label>
+                        Diversity (0-1):
+                        <input type="number" id="song-diversity" value="0.7" min="0" max="1" step="0.1">
+                    </label>
+                    <button onclick="getSongRecommendations()" class="btn-primary">Get Recommendations</button>
+                </div>
+            </div>
+
+            <div id="song-recommendations" class="recommendations"></div>
+        </div>
+
+        <!-- Mood-Based Recommendations -->
+        <div id="mood-based" class="tab-content">
+            <div class="section">
+                <h2>Mood-Based Recommendations</h2>
+                <p>Discover songs that match your mood</p>
+
+                <div class="mood-selector">
+                    <button class="mood-btn" onclick="selectMood('happy')" data-mood="happy">
+                        😊 Happy
+                    </button>
+                    <button class="mood-btn" onclick="selectMood('chill')" data-mood="chill">
+                        😌 Chill
+                    </button>
+                    <button class="mood-btn" onclick="selectMood('sad')" data-mood="sad">
+                        😢 Sad
+                    </button>
+                    <button class="mood-btn" onclick="selectMood('energetic')" data-mood="energetic">
+                        ⚡ Energetic
+                    </button>
+                </div>
+
+                <div class="controls">
+                    <label>
+                        Number of recommendations:
+                        <input type="number" id="mood-n-recs" value="10" min="1" max="50">
+                    </label>
+                    <label>
+                        <input type="checkbox" id="mood-popular" checked>
+                        Include popular songs
+                    </label>
+                    <button onclick="getMoodRecommendations()" class="btn-primary">Get Recommendations</button>
+                </div>
+            </div>
+
+            <div id="mood-recommendations" class="recommendations"></div>
+        </div>
+
+        <!-- Hybrid Recommendations -->
+        <div id="hybrid" class="tab-content">
+            <div class="section">
+                <h2>Hybrid Recommendations</h2>
+                <p>Combine multiple songs and optional mood for personalized recommendations</p>
+
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="hybrid-search" 
+                        placeholder="Search and add songs..."
+                        onkeyup="searchSongsHybrid(event)"
+                    >
+                    <div id="hybrid-search-results" class="search-results"></div>
+                </div>
+
+                <div id="hybrid-selected-songs" class="selected-songs"></div>
+
+                <div class="controls">
+                    <label>
+                        Optional Mood Filter:
+                        <select id="hybrid-mood">
+                            <option value="">None</option>
+                            <option value="happy">Happy</option>
+                            <option value="chill">Chill</option>
+                            <option value="sad">Sad</option>
+                            <option value="energetic">Energetic</option>
+                        </select>
+                    </label>
+                    <label>
+                        Number of recommendations:
+                        <input type="number" id="hybrid-n-recs" value="10" min="1" max="50">
+                    </label>
+                    <button onclick="getHybridRecommendations()" class="btn-primary">Get Recommendations</button>
+                </div>
+            </div>
+
+            <div id="hybrid-recommendations" class="recommendations"></div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading recommendations...</p>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
