@@ -57,7 +57,7 @@ function HybridTab() {
             let transformedRecs = data.recommendations.map(rec => ({
                 ...rec.song,
                 similarity_score: rec.score,
-                explanation: rec.explanation?.explanation_text || rec.explanation?.text
+                explanation: rec.explanation?.explanation
             }))
             
             // Filter for popular songs if toggle is on

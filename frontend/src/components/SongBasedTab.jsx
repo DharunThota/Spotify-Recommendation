@@ -22,7 +22,7 @@ function SongBasedTab() {
             const transformedRecs = data.recommendations.map(rec => ({
                 ...rec.song,
                 similarity_score: rec.score,
-                explanation: rec.explanation?.explanation_text || rec.explanation?.text
+                explanation: rec.explanation?.explanation
             }))
             setRecommendations(transformedRecs)
         } catch (err) {

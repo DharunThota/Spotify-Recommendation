@@ -17,6 +17,7 @@ build/
 *.ann
 .vscode/
 .idea/
+.github/
 
 # Environment variables (IMPORTANT!)
 .env
