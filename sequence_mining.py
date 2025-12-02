@@ -1,4 +1,4 @@
-"""Sequential Pattern Mining for Music Recommendations using PrefixSpan."""
+"""Sequential Pattern Mining for Music Recommendations using PrefixSpan (true implementation)."""
 
 import pandas as pd
 import numpy as np
@@ -8,32 +8,44 @@ from collections import defaultdict, Counter
 import logging
 import pickle
 import os
+import math
 
 logger = logging.getLogger(__name__)
 
 
 class SequentialPatternMiner:
-    """Mines listening sequences from Spotify history using PrefixSpan algorithm."""
+    """Mines listening sequences from Spotify history using a true PrefixSpan algorithm."""
     
-    def __init__(self, min_support: float = 0.3, max_gap: int = 2, session_gap_minutes: int = 30):
+    def __init__(
+        self,
+        min_support: float = 0.3,
+        max_gap: Optional[int] = None,
+        session_gap_minutes: int = 30,
+        max_pattern_length: int = 5,
+    ):
         """
         Initialize Sequential Pattern Miner.
         
         Args:
             min_support: Minimum frequency for pattern (0-1), patterns appearing less frequently are filtered
-            max_gap: Maximum gap between items in sequence (number of songs)
+            max_gap: Maximum gap between items in sequence (number of songs). If None -> unlimited gap.
             session_gap_minutes: Time gap to consider new listening session (in minutes)
+            max_pattern_length: Maximum length of patterns to mine (inclusive)
         """
         self.min_support = min_support
-        self.max_gap = max_gap
+        # if max_gap <= 0, treat as unlimited (None)
+        self.max_gap = None if (max_gap is None or max_gap <= 0) else int(max_gap)
         self.session_gap_minutes = session_gap_minutes
-        self.patterns = []  # List of (pattern, support) tuples
-        self.pattern_index = {}  # song_id -> patterns containing it
-        self.transitions = defaultdict(Counter)  # (song_a, song_b) -> count
+        self.max_pattern_length = max_pattern_length
+
+        self.patterns: List[Tuple[List[str], float]] = []  # List of (pattern, support) tuples
+        self.pattern_index: Dict[str, List[Tuple[List[str], float]]] = {}  # song_id -> patterns containing it
+        self.transitions = defaultdict(Counter)  # song_a -> Counter(next_song -> count)
         self.next_song_predictions = defaultdict(list)  # song_id -> [(next_song, confidence)]
         self.num_sessions = 0  # Track number of sessions
         self.unique_songs = set()  # Track unique songs
-        
+        self._sequences: List[List[str]] = []  # Stored sequences for mining internals
+    
     def _extract_sequences_from_history(self, listening_history: List[Dict]) -> List[List[str]]:
         """
         Extract listening sequences from Spotify history.
@@ -87,7 +99,7 @@ class SequentialPatternMiner:
     
     def _mine_patterns_prefixspan(self, sequences: List[List[str]]) -> List[Tuple[List[str], float]]:
         """
-        Mine frequent sequential patterns using simplified PrefixSpan algorithm.
+        True PrefixSpan implementation (pattern-growth with projected databases).
         
         Args:
             sequences: List of song ID sequences
@@ -95,36 +107,91 @@ class SequentialPatternMiner:
         Returns:
             List of (pattern, support) tuples
         """
-        # Count pattern occurrences
-        pattern_counts = defaultdict(int)
+        self._sequences = sequences
         total_sequences = len(sequences)
-        
         if total_sequences == 0:
             return []
         
-        min_count = int(self.min_support * total_sequences)
+        # Minimum number of sequences a pattern must appear in
+        min_count = math.ceil(self.min_support * total_sequences)
+        if min_count <= 0:
+            min_count = 1
         
-        # Mine patterns of different lengths
-        for length in range(2, 5):  # Mine patterns of length 2-4
-            for seq in sequences:
-                # Extract all subsequences of given length
-                for i in range(len(seq) - length + 1):
-                    # Consider max_gap constraint
-                    if i + length - 1 - i <= self.max_gap:
-                        pattern = tuple(seq[i:i+length])
-                        pattern_counts[pattern] += 1
+        # We'll store patterns as tuple -> count (count is number of distinct sequences containing pattern)
+        found_patterns: Dict[Tuple[str, ...], int] = {}
         
-        # Filter by min_support and convert to list
+        # Helper: initial projected DB contains all sequences with last matched index = -1
+        initial_projected = [(seq_id, -1) for seq_id in range(total_sequences)]
+        
+        def get_candidates(projected):
+            """
+            From projected DB (list of (seq_id, last_pos)), return counts and left-most positions
+            for candidate items that appear after last_pos within allowed gap.
+            
+            Returns:
+                candidates: dict item -> {'count': int, 'positions': [(seq_id, pos), ...]}
+            """
+            candidates = {}
+            seen_in_sequence = {}  # item -> set(seq_id) to ensure we count per-sequence once
+            for seq_id, last_pos in projected:
+                seq = sequences[seq_id]
+                start_idx = last_pos + 1
+                if self.max_gap is None:
+                    end_idx = len(seq)
+                else:
+                    # allowed next_idx <= last_pos + max_gap + 1
+                    end_idx = min(len(seq), last_pos + self.max_gap + 2)
+                # find all distinct items in this allowed window; but for projection we pick the leftmost occurrence
+                local_seen = set()
+                for idx in range(start_idx, end_idx):
+                    item = seq[idx]
+                    if item in local_seen:
+                        continue
+                    local_seen.add(item)
+                    if item not in seen_in_sequence:
+                        seen_in_sequence[item] = set()
+                    if seq_id not in seen_in_sequence[item]:
+                        seen_in_sequence[item].add(seq_id)
+                        # record leftmost occurrence for projection: only keep earliest occurrence index per sequence
+                        if item not in candidates:
+                            candidates[item] = {'count': 0, 'positions': []}
+                        candidates[item]['count'] += 1
+                        candidates[item]['positions'].append((seq_id, idx))
+            return candidates
+        
+        def recurse(prefix: Tuple[str, ...], projected):
+            """
+            Recursive PrefixSpan.
+            prefix: current pattern tuple
+            projected: list of (seq_id, last_pos) indicating sequences and last matched position
+            """
+            candidates = get_candidates(projected)
+            # iterate candidates in deterministic order (e.g., sorted by count desc then item)
+            for item, v in sorted(candidates.items(), key=lambda kv: (-kv[1]['count'], kv[0])):
+                count = v['count']
+                if count < min_count:
+                    continue
+                new_pattern = prefix + (item,)
+                found_patterns[new_pattern] = count
+                # Build new projected DB for recursion using recorded leftmost positions
+                new_projected = v['positions']
+                # Limit pattern length
+                if len(new_pattern) < self.max_pattern_length:
+                    recurse(new_pattern, new_projected)
+        
+        # Start recursion with empty prefix
+        recurse(tuple(), initial_projected)
+        
+        # Convert found_patterns to (pattern_list, support)
         patterns = []
-        for pattern, count in pattern_counts.items():
-            if count >= min_count:
-                support = count / total_sequences
-                patterns.append((list(pattern), support))
+        for pattern, count in found_patterns.items():
+            support = count / total_sequences
+            patterns.append((list(pattern), support))
         
-        # Sort by support (most frequent first)
-        patterns.sort(key=lambda x: x[1], reverse=True)
+        # Optionally sort by support then by length desc
+        patterns.sort(key=lambda x: (x[1], len(x[0])), reverse=True)
         
-        logger.info(f"Mined {len(patterns)} frequent patterns with min_support={self.min_support}")
+        logger.info(f"PrefixSpan mined {len(patterns)} patterns (min_count={min_count}, total_sequences={total_sequences})")
         return patterns
     
     def _build_transition_graph(self, sequences: List[List[str]]) -> None:
@@ -188,7 +255,7 @@ class SequentialPatternMiner:
         for seq in sequences:
             self.unique_songs.update(seq)
         
-        # Mine frequent patterns
+        # Mine frequent patterns using true PrefixSpan
         self.patterns = self._mine_patterns_prefixspan(sequences)
         
         # Build transition graph
@@ -216,22 +283,21 @@ class SequentialPatternMiner:
         
         predictions = defaultdict(float)
         
-        # Strategy 1: Look for patterns that match current sequence
+        # Strategy 1: Look for patterns that match current sequence (exact prefix matching inside pattern)
         for pattern, support in self.patterns:
-            # Check if current sequence matches beginning of pattern
             pattern_len = len(pattern)
             seq_len = len(current_sequence)
             
-            # Try to match with different suffixes of current_sequence
-            for start_idx in range(max(0, seq_len - pattern_len + 1)):
-                match_len = min(seq_len - start_idx, pattern_len - 1)
-                if current_sequence[start_idx:start_idx + match_len] == pattern[:match_len]:
-                    # Found a match, predict the next song in pattern
-                    if match_len < pattern_len:
-                        next_song = pattern[match_len]
-                        # Score combines pattern support and match quality
-                        score = support * (match_len / (pattern_len - 1))
-                        predictions[next_song] = max(predictions[next_song], score)
+            # try to find the longest suffix of current_sequence that matches a prefix of pattern
+            max_match = 0
+            for l in range(1, min(pattern_len - 1, seq_len) + 1):
+                if current_sequence[-l:] == pattern[:l]:
+                    max_match = l
+            if max_match > 0 and max_match < pattern_len:
+                next_song = pattern[max_match]
+                # Score combines pattern support and match quality
+                score = support * (max_match / (pattern_len - 1))
+                predictions[next_song] = max(predictions[next_song], score)
         
         # Strategy 2: Use direct transitions from last song
         last_song = current_sequence[-1]
@@ -272,7 +338,7 @@ class SequentialPatternMiner:
                 try:
                     song_idx = pattern.index(song_id)
                     # Check if any context songs appear before this position
-                    for ctx_song in context_songs:
+                    for ctx_song in context_songs[::-1]:  # prefer most recent context match
                         if ctx_song in pattern[:song_idx]:
                             matching_patterns.append((pattern, support, ctx_song))
                             break
@@ -280,13 +346,13 @@ class SequentialPatternMiner:
                     continue
         
         if matching_patterns:
-            # Use best matching pattern
+            # Use best matching pattern (highest support)
             best_pattern, support, ctx_song = max(matching_patterns, key=lambda x: x[1])
             explanation["pattern"] = best_pattern
             explanation["support"] = support
             explanation["pattern_type"] = "sequential"
             
-            # Calculate confidence from transitions
+            # Calculate confidence from transitions (if possible)
             if context_songs and context_songs[-1] in self.transitions:
                 trans = self.transitions[context_songs[-1]]
                 if song_id in trans:
@@ -297,13 +363,11 @@ class SequentialPatternMiner:
             support_pct = int(support * 100)
             if len(context_songs) > 1:
                 explanation["explanation_text"] = (
-                    f"{support_pct}% of listeners who enjoyed this sequence "
-                    f"also played this track"
+                    f"{support_pct}% of sessions that contained this sequence also included this track"
                 )
             else:
                 explanation["explanation_text"] = (
-                    f"{support_pct}% of listeners who played {ctx_song} "
-                    f"also chose this song next"
+                    f"{support_pct}% of listeners who played {ctx_song} before chose this song later in the session"
                 )
         
         # Fallback to direct transition
@@ -336,7 +400,8 @@ class SequentialPatternMiner:
             'config': {
                 'min_support': self.min_support,
                 'max_gap': self.max_gap,
-                'session_gap_minutes': self.session_gap_minutes
+                'session_gap_minutes': self.session_gap_minutes,
+                'max_pattern_length': self.max_pattern_length
             }
         }
         
@@ -363,9 +428,10 @@ class SequentialPatternMiner:
         # Create new instance with loaded config
         config = data['config']
         miner = cls(
-            min_support=config['min_support'],
-            max_gap=config['max_gap'],
-            session_gap_minutes=config['session_gap_minutes']
+            min_support=config.get('min_support', 0.3),
+            max_gap=config.get('max_gap', None),
+            session_gap_minutes=config.get('session_gap_minutes', 30),
+            max_pattern_length=config.get('max_pattern_length', 5),
         )
         
         # Load mined data
