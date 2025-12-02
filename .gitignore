@@ -17,3 +17,4 @@ build/
 *.ann
 .vscode/
 .idea/
+.dist/
