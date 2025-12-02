@@ -504,6 +504,429 @@ class SpotifyAnalytics:
             logger.error(f"Error generating visualizations: {str(e)}")
             return {}
     
+    def calculate_artist_diversity_score(self, tracks: List[Dict]) -> Dict:
+        """Calculate artist diversity score (unique artists / total songs)."""
+        if not tracks:
+            return {"score": 0, "classification": "No data"}
+        
+        df = pd.DataFrame(tracks)
+        unique_artists = df['artist'].nunique()
+        total_tracks = len(df)
+        
+        # Calculate diversity score (0-100)
+        diversity_score = int((unique_artists / total_tracks) * 100)
+        
+        # Classification
+        if diversity_score >= 75:
+            classification = "Explorer"
+            message = "You explore a wide variety of artists!"
+        elif diversity_score >= 50:
+            classification = "Balanced"
+            message = "You have a healthy mix of favorites and new discoveries."
+        else:
+            classification = "Loyalist"
+            message = "You're loyal to your favorite artists!"
+        
+        return {
+            "score": diversity_score,
+            "classification": classification,
+            "message": message,
+            "unique_artists": unique_artists,
+            "total_tracks": total_tracks
+        }
+    
+    def calculate_new_vs_old_taste(self, tracks: List[Dict]) -> Dict:
+        """Analyze new vs old music taste based on release years."""
+        if not self.sp or not tracks:
+            return {"error": "No data available"}
+        
+        try:
+            # Get full track details with album release dates
+            track_ids = [t['id'] for t in tracks]
+            release_years = []
+            
+            for i in range(0, len(track_ids), 50):
+                batch = track_ids[i:i+50]
+                batch_tracks = self.sp.tracks(batch)['tracks']
+                
+                for track in batch_tracks:
+                    if track and track.get('album'):
+                        release_date = track['album'].get('release_date', '')
+                        if release_date:
+                            year = int(release_date.split('-')[0])
+                            release_years.append(year)
+            
+            if not release_years:
+                return {"error": "No release date information available"}
+            
+            current_year = datetime.now().year
+            last_year = current_year - 1
+            
+            # Calculate percentages
+            recent_count = sum(1 for year in release_years if year >= last_year)
+            recent_percentage = int((recent_count / len(release_years)) * 100)
+            
+            # Average age of songs
+            avg_age = current_year - np.mean(release_years)
+            
+            # Classification
+            if recent_percentage >= 60:
+                classification = "Trendsetter"
+                message = f"You like to keep it fresh — {recent_percentage}% of your library is from recent releases"
+            elif recent_percentage >= 30:
+                classification = "Balanced"
+                message = f"You enjoy a mix of new and classic — {recent_percentage}% recent releases"
+            else:
+                classification = "Nostalgic"
+                message = f"You love the classics — only {recent_percentage}% from recent years"
+            
+            return {
+                "recent_percentage": recent_percentage,
+                "avg_age": round(avg_age, 1),
+                "classification": classification,
+                "message": message,
+                "release_years": release_years
+            }
+        except Exception as e:
+            logger.error(f"Error calculating new vs old taste: {str(e)}")
+            return {"error": str(e)}
+    
+    def calculate_popularity_ranking(self, tracks: List[Dict]) -> Dict:
+        """Calculate average popularity and classify listener type."""
+        if not tracks:
+            return {"score": 0, "classification": "No data"}
+        
+        df = pd.DataFrame(tracks)
+        avg_popularity = df['popularity'].mean()
+        
+        # Classification
+        if avg_popularity >= 80:
+            classification = "Mainstream"
+            message = "You love the hits! You're all about mainstream music."
+            emoji = "🔥"
+        elif avg_popularity >= 50:
+            classification = "Balanced"
+            message = "You enjoy a mix of popular and underground tracks."
+            emoji = "🎵"
+        else:
+            classification = "Underground"
+            message = f"You love discovering hidden gems — your avg popularity = {int(avg_popularity)}"
+            emoji = "💎"
+        
+        return {
+            "score": int(avg_popularity),
+            "classification": classification,
+            "message": message,
+            "emoji": emoji
+        }
+    
+    def analyze_playlist_personality(self, tracks: List[Dict]) -> Dict:
+        """Analyze playlist characteristics."""
+        if not tracks:
+            return {}
+        
+        df = pd.DataFrame(tracks)
+        
+        # Calculate stats
+        avg_duration_ms = df['duration_ms'].mean()
+        avg_duration_min = int(avg_duration_ms / 60000)
+        avg_duration_sec = int((avg_duration_ms % 60000) / 1000)
+        
+        # Most repeated artist
+        top_artist = df['artist'].value_counts().head(1)
+        most_common_artist = top_artist.index[0] if len(top_artist) > 0 else "Unknown"
+        most_common_count = int(top_artist.values[0]) if len(top_artist) > 0 else 0
+        
+        # Most popular track
+        most_popular_idx = df['popularity'].idxmax()
+        most_popular_track = df.loc[most_popular_idx]
+        
+        return {
+            "avg_duration": f"{avg_duration_min}m {avg_duration_sec}s",
+            "avg_duration_ms": int(avg_duration_ms),
+            "most_common_artist": most_common_artist,
+            "most_common_artist_count": most_common_count,
+            "most_popular_track": {
+                "name": most_popular_track['name'],
+                "artist": most_popular_track['artist'],
+                "popularity": int(most_popular_track['popularity'])
+            },
+            "total_tracks": len(df)
+        }
+    
+    def get_release_year_distribution(self, tracks: List[Dict]) -> Dict:
+        """Get distribution of release years for trend analysis."""
+        if not self.sp or not tracks:
+            return {"error": "No data available"}
+        
+        try:
+            track_ids = [t['id'] for t in tracks]
+            year_counts = {}
+            
+            for i in range(0, len(track_ids), 50):
+                batch = track_ids[i:i+50]
+                batch_tracks = self.sp.tracks(batch)['tracks']
+                
+                for track in batch_tracks:
+                    if track and track.get('album'):
+                        release_date = track['album'].get('release_date', '')
+                        if release_date:
+                            year = int(release_date.split('-')[0])
+                            year_counts[year] = year_counts.get(year, 0) + 1
+            
+            if not year_counts:
+                return {"error": "No release date information available"}
+            
+            # Find peak year
+            peak_year = max(year_counts, key=year_counts.get)
+            peak_count = year_counts[peak_year]
+            
+            # Convert to sorted list for visualization
+            year_data = [{"year": year, "count": count} for year, count in sorted(year_counts.items())]
+            
+            return {
+                "distribution": year_data,
+                "peak_year": peak_year,
+                "peak_count": peak_count,
+                "message": f"Your music peaked in {peak_year} — nostalgia mode activated!" if peak_year < datetime.now().year - 3 else f"You're vibing with {peak_year} releases!"
+            }
+        except Exception as e:
+            logger.error(f"Error getting release year distribution: {str(e)}")
+            return {"error": str(e)}
+    
+    def determine_music_identity(self, wrapped_data: Dict) -> Dict:
+        """Determine user's music identity based on all metrics."""
+        # Collect scores from various analyses
+        diversity_score = wrapped_data.get('artist_diversity', {}).get('score', 50)
+        popularity_score = wrapped_data.get('popularity_ranking', {}).get('score', 50)
+        recent_percentage = wrapped_data.get('new_vs_old', {}).get('recent_percentage', 50)
+        
+        # Determine primary identity
+        identity_scores = {}
+        
+        # Explorer: High diversity, low popularity avg
+        identity_scores['Explorer'] = (diversity_score * 0.5) + ((100 - popularity_score) * 0.3) + (recent_percentage * 0.2)
+        
+        # Superfan: Low diversity, high concentration
+        identity_scores['Superfan'] = ((100 - diversity_score) * 0.6) + (popularity_score * 0.2) + ((100 - recent_percentage) * 0.2)
+        
+        # Trendsetter: Mostly new releases, high diversity
+        identity_scores['Trendsetter'] = (recent_percentage * 0.5) + (diversity_score * 0.3) + ((100 - popularity_score) * 0.2)
+        
+        # Mainstream: High popularity, balanced diversity
+        identity_scores['Mainstream'] = (popularity_score * 0.5) + (abs(diversity_score - 50) * -0.3) + (recent_percentage * 0.2)
+        
+        # Nostalgic: Old music preference
+        identity_scores['Nostalgic'] = ((100 - recent_percentage) * 0.6) + (diversity_score * 0.2) + ((100 - popularity_score) * 0.2)
+        
+        # Find top identity
+        primary_identity = max(identity_scores, key=identity_scores.get)
+        primary_score = int(identity_scores[primary_identity])
+        
+        # Get secondary identity
+        remaining = {k: v for k, v in identity_scores.items() if k != primary_identity}
+        secondary_identity = max(remaining, key=remaining.get) if remaining else None
+        
+        # Identity descriptions
+        descriptions = {
+            'Explorer': "You're always discovering new artists and hidden gems across diverse genres.",
+            'Superfan': "You're deeply devoted to your favorite artists and stick with what you love.",
+            'Trendsetter': "You're ahead of the curve, always listening to the latest and freshest releases.",
+            'Mainstream': "You love the hits and popular tracks that everyone's talking about.",
+            'Nostalgic': "You cherish the classics and music from the past holds a special place in your heart."
+        }
+        
+        return {
+            "primary_identity": primary_identity,
+            "primary_score": primary_score,
+            "secondary_identity": secondary_identity,
+            "description": descriptions.get(primary_identity, ""),
+            "all_scores": identity_scores
+        }
+    
+    def determine_music_identity(self, wrapped_data: Dict) -> Dict:
+        """Determine user's music identity based on all metrics."""
+        # Collect scores from various analyses
+        diversity_score = wrapped_data.get('artist_diversity', {}).get('score', 50)
+        popularity_score = wrapped_data.get('popularity_ranking', {}).get('score', 50)
+        recent_percentage = wrapped_data.get('new_vs_old', {}).get('recent_percentage', 50)
+        
+        # Determine primary identity
+        identity_scores = {}
+        
+        # Explorer: High diversity, low popularity avg
+        identity_scores['Explorer'] = (diversity_score * 0.5) + ((100 - popularity_score) * 0.3) + (recent_percentage * 0.2)
+        
+        # Superfan: Low diversity, high concentration
+        identity_scores['Superfan'] = ((100 - diversity_score) * 0.6) + (popularity_score * 0.2) + ((100 - recent_percentage) * 0.2)
+        
+        # Trendsetter: Mostly new releases, high diversity
+        identity_scores['Trendsetter'] = (recent_percentage * 0.5) + (diversity_score * 0.3) + ((100 - popularity_score) * 0.2)
+        
+        # Mainstream: High popularity, balanced diversity
+        identity_scores['Mainstream'] = (popularity_score * 0.5) + (abs(diversity_score - 50) * -0.3) + (recent_percentage * 0.2)
+        
+        # Nostalgic: Old music preference
+        identity_scores['Nostalgic'] = ((100 - recent_percentage) * 0.6) + (diversity_score * 0.2) + ((100 - popularity_score) * 0.2)
+        
+        # Find top identity
+        primary_identity = max(identity_scores, key=identity_scores.get)
+        primary_score = int(identity_scores[primary_identity])
+        
+        # Get secondary identity
+        remaining = {k: v for k, v in identity_scores.items() if k != primary_identity}
+        secondary_identity = max(remaining, key=remaining.get) if remaining else None
+        
+        # Identity descriptions
+        descriptions = {
+            'Explorer': "You're always discovering new artists and hidden gems across diverse genres.",
+            'Superfan': "You're deeply devoted to your favorite artists and stick with what you love.",
+            'Trendsetter': "You're ahead of the curve, always listening to the latest and freshest releases.",
+            'Mainstream': "You love the hits and popular tracks that everyone's talking about.",
+            'Nostalgic': "You cherish the classics and music from the past holds a special place in your heart."
+        }
+        
+        return {
+            "primary_identity": primary_identity,
+            "primary_score": primary_score,
+            "secondary_identity": secondary_identity,
+            "description": descriptions.get(primary_identity, ""),
+            "all_scores": identity_scores
+        }
+    
+    def analyze_listening_time_patterns(self) -> Dict:
+        """Analyze listening patterns by time of day and day of week from recently played."""
+        try:
+            # Get recently played tracks (max 50)
+            recent_tracks = self.get_recently_played(limit=50)
+            
+            if not recent_tracks:
+                return {"error": "No recently played data available"}
+            
+            df = pd.DataFrame(recent_tracks)
+            df['played_at'] = pd.to_datetime(df['played_at'])
+            df['hour'] = df['played_at'].dt.hour
+            df['day_of_week'] = df['played_at'].dt.day_name()
+            df['date'] = df['played_at'].dt.date
+            
+            # Hour distribution
+            hour_counts = df['hour'].value_counts().sort_index()
+            hourly_data = [
+                {
+                    "hour": int(hour),
+                    "count": int(count),
+                    "period": "Night" if hour < 6 else "Morning" if hour < 12 else "Afternoon" if hour < 18 else "Evening"
+                }
+                for hour, count in hour_counts.items()
+            ]
+            
+            # Day of week distribution
+            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            day_counts = df['day_of_week'].value_counts()
+            daily_data = [
+                {"day": day, "count": int(day_counts.get(day, 0))}
+                for day in day_order
+            ]
+            
+            # Find peak listening times
+            peak_hour = int(hour_counts.idxmax()) if not hour_counts.empty else 0
+            peak_day = day_counts.idxmax() if not day_counts.empty else "Unknown"
+            
+            # Classify listener type based on peak times
+            if peak_hour < 6:
+                time_personality = "Night Owl"
+                time_message = f"You love listening at {peak_hour}:00 - true night owl vibes!"
+            elif peak_hour < 12:
+                time_personality = "Early Bird"
+                time_message = f"You start your day with music at {peak_hour}:00 - morning person energy!"
+            elif peak_hour < 18:
+                time_personality = "Afternoon Listener"
+                time_message = f"Peak listening at {peak_hour}:00 - perfect afternoon soundtrack!"
+            else:
+                time_personality = "Evening Enthusiast"
+                time_message = f"You unwind with music at {peak_hour}:00 - evening relaxation mode!"
+            
+            return {
+                "hourly_data": hourly_data,
+                "daily_data": daily_data,
+                "peak_hour": peak_hour,
+                "peak_day": peak_day,
+                "time_personality": time_personality,
+                "time_message": time_message,
+                "total_plays": len(df)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing listening time patterns: {str(e)}")
+            return {"error": str(e)}
+    
+    def get_wrapped_insights(self, time_range: str = 'medium_term') -> Dict:
+        """Get comprehensive Spotify-Wrapped style insights."""
+        try:
+            # Gather data
+            top_tracks = self.get_top_tracks(time_range=time_range, limit=50)
+            top_artists = self.get_top_artists(time_range=time_range, limit=50)
+            
+            # Calculate all insights
+            artist_diversity = self.calculate_artist_diversity_score(top_tracks)
+            new_vs_old = self.calculate_new_vs_old_taste(top_tracks)
+            popularity_ranking = self.calculate_popularity_ranking(top_tracks)
+            playlist_personality = self.analyze_playlist_personality(top_tracks)
+            release_trends = self.get_release_year_distribution(top_tracks)
+            
+            # Calculate top artists share percentage
+            df_tracks = pd.DataFrame(top_tracks)
+            artist_counts = df_tracks['artist'].value_counts()
+            top_artists_with_share = []
+            total_tracks = len(df_tracks)
+            
+            for idx, artist_data in enumerate(top_artists[:10]):
+                artist_name = artist_data['name']
+                count = artist_counts.get(artist_name, 0)
+                share = int((count / total_tracks) * 100) if total_tracks > 0 else 0
+                top_artists_with_share.append({
+                    **artist_data,
+                    'track_count': int(count),
+                    'share_percentage': share
+                })
+            
+            # Genre distribution
+            genre_counts = {}
+            for artist in top_artists:
+                for genre in artist.get('genres', []):
+                    genre_counts[genre] = genre_counts.get(genre, 0) + 1
+            
+            genre_distribution = [
+                {"name": genre, "value": count, "percentage": int((count / len(top_artists)) * 100)}
+                for genre, count in sorted(genre_counts.items(), key=lambda x: x[1], reverse=True)[:8]
+            ]
+            
+            # Time-based analysis
+            time_patterns = self.analyze_listening_time_patterns()
+            
+            # Compile wrapped insights
+            wrapped_data = {
+                'artist_diversity': artist_diversity,
+                'new_vs_old': new_vs_old,
+                'popularity_ranking': popularity_ranking,
+                'playlist_personality': playlist_personality,
+                'release_trends': release_trends,
+                'top_artists_with_share': top_artists_with_share,
+                'genre_distribution': genre_distribution,
+                'top_tracks': top_tracks[:10],
+                'time_patterns': time_patterns
+            }
+            
+            # Determine music identity
+            music_identity = self.determine_music_identity(wrapped_data)
+            wrapped_data['music_identity'] = music_identity
+            
+            return wrapped_data
+            
+        except Exception as e:
+            logger.error(f"Error generating wrapped insights: {str(e)}")
+            raise
+    
     def get_comprehensive_dashboard(
         self,
         time_range: str = 'medium_term'

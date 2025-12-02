@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, 
-         Tooltip, Legend } from 'recharts'
+         Tooltip, Legend, LineChart, Line, Area, AreaChart } from 'recharts'
+import { Music, TrendingUp, Users, Clock, Trophy, Sparkles, Calendar, Target, Heart, Zap } from 'lucide-react'
+import { getWrappedInsights } from '../services/api'
 import './AnalyticsPage.css'
 
 function AnalyticsPage() {
@@ -9,6 +11,7 @@ function AnalyticsPage() {
     const [loading, setLoading] = useState(false)
     const [userData, setUserData] = useState(null)
     const [dashboard, setDashboard] = useState(null)
+    const [wrappedInsights, setWrappedInsights] = useState(null)
     const [activeTimeRange, setActiveTimeRange] = useState('medium_term')
     const [associations, setAssociations] = useState(null)
 
@@ -22,6 +25,7 @@ function AnalyticsPage() {
                     display_name: event.data.display_name
                 })
                 loadDashboard('medium_term')
+                loadWrappedInsights('medium_term')
             }
         }
 
@@ -79,6 +83,15 @@ function AnalyticsPage() {
         }
     }
 
+    const loadWrappedInsights = async (timeRange) => {
+        try {
+            const data = await getWrappedInsights(timeRange)
+            setWrappedInsights(data)
+        } catch (error) {
+            console.error('Error loading wrapped insights:', error)
+        }
+    }
+
     const loadAssociations = async () => {
         try {
             const response = await fetch(
@@ -92,6 +105,11 @@ function AnalyticsPage() {
         } catch (error) {
             console.error('Error loading associations:', error)
         }
+    }
+
+    const handleTimeRangeChange = (timeRange) => {
+        loadDashboard(timeRange)
+        loadWrappedInsights(timeRange)
     }
 
     const timeRangeLabels = {
@@ -116,29 +134,22 @@ function AnalyticsPage() {
     }
 
     const getTopArtistsChartData = () => {
-        if (!dashboard?.listening_patterns?.top_artists) return []
-        return Object.entries(dashboard.listening_patterns.top_artists)
-            .slice(0, 10)
-            .map(([artist, count]) => ({
-                name: artist.length > 20 ? artist.substring(0, 20) + '...' : artist,
-                plays: count
-            }))
+        if (!wrappedInsights?.top_artists_with_share) return []
+        return wrappedInsights.top_artists_with_share.slice(0, 10).map(artist => ({
+            name: artist.name.length > 20 ? artist.name.substring(0, 20) + '...' : artist.name,
+            share: artist.share_percentage,
+            count: artist.track_count
+        }))
     }
 
     const getGenreDistribution = () => {
-        if (!dashboard?.top_artists) return []
-        const genreCounts = {}
-        dashboard.top_artists.forEach(artist => {
-            if (artist.genres) {
-                artist.genres.forEach(genre => {
-                    genreCounts[genre] = (genreCounts[genre] || 0) + 1
-                })
-            }
-        })
-        return Object.entries(genreCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 8)
-            .map(([name, value]) => ({ name, value }))
+        if (!wrappedInsights?.genre_distribution) return []
+        return wrappedInsights.genre_distribution
+    }
+
+    const getReleaseYearTrend = () => {
+        if (!wrappedInsights?.release_trends?.distribution) return []
+        return wrappedInsights.release_trends.distribution
     }
 
     if (!isAuthenticated) {
@@ -230,7 +241,7 @@ function AnalyticsPage() {
                         <button
                             key={value}
                             className={`time-range-button ${activeTimeRange === value ? 'active' : ''}`}
-                            onClick={() => loadDashboard(value)}
+                            onClick={() => handleTimeRangeChange(value)}
                             disabled={loading}
                         >
                             {label}
@@ -239,8 +250,416 @@ function AnalyticsPage() {
                 </div>
             </div>
 
-            {dashboard && (
+            {dashboard && wrappedInsights && (
                 <div className="analytics-content">
+                    {/* Music Identity Card - Hero Section */}
+                    {wrappedInsights.music_identity && (
+                        <div className="identity-hero">
+                            <div className="identity-card">
+                                <div className="identity-badge">
+                                    <Sparkles size={32} className="identity-icon" />
+                                    <h2 className="identity-title">Your Music Identity</h2>
+                                </div>
+                                <div className="identity-type">
+                                    {wrappedInsights.music_identity.primary_identity}
+                                </div>
+                                <p className="identity-description">
+                                    {wrappedInsights.music_identity.description}
+                                </p>
+                                {wrappedInsights.music_identity.secondary_identity && (
+                                    <p className="identity-secondary">
+                                        with hints of <strong>{wrappedInsights.music_identity.secondary_identity}</strong>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Wrapped Insights Grid */}
+                    <div className="wrapped-grid">
+                        {/* Artist Diversity Score */}
+                        {wrappedInsights.artist_diversity && (
+                            <div className="wrapped-card">
+                                <div className="wrapped-header">
+                                    <Users size={24} className="wrapped-icon" />
+                                    <h3>Artist Diversity</h3>
+                                </div>
+                                <div className="score-circle">
+                                    <svg className="score-svg" viewBox="0 0 160 160">
+                                        <circle
+                                            cx="80"
+                                            cy="80"
+                                            r="70"
+                                            fill="none"
+                                            stroke="#e0e0e0"
+                                            strokeWidth="12"
+                                        />
+                                        <circle
+                                            cx="80"
+                                            cy="80"
+                                            r="70"
+                                            fill="none"
+                                            stroke="#1DB954"
+                                            strokeWidth="12"
+                                            strokeDasharray={`${wrappedInsights.artist_diversity.score * 4.4} 440`}
+                                            strokeLinecap="round"
+                                            transform="rotate(-90 80 80)"
+                                        />
+                                        <text x="80" y="75" textAnchor="middle" className="score-value">
+                                            {wrappedInsights.artist_diversity.score}
+                                        </text>
+                                        <text x="80" y="95" textAnchor="middle" className="score-label">
+                                            / 100
+                                        </text>
+                                    </svg>
+                                </div>
+                                <div className="wrapped-classification">
+                                    {wrappedInsights.artist_diversity.classification}
+                                </div>
+                                <p className="wrapped-message">
+                                    {wrappedInsights.artist_diversity.message}
+                                </p>
+                                <div className="wrapped-stats">
+                                    <span>{wrappedInsights.artist_diversity.unique_artists} unique artists</span>
+                                    <span>across {wrappedInsights.artist_diversity.total_tracks} tracks</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Popularity Ranking */}
+                        {wrappedInsights.popularity_ranking && (
+                            <div className="wrapped-card">
+                                <div className="wrapped-header">
+                                    <TrendingUp size={24} className="wrapped-icon" />
+                                    <h3>Popularity Profile</h3>
+                                </div>
+                                <div className="popularity-badge">
+                                    <span className="popularity-emoji">{wrappedInsights.popularity_ranking.emoji}</span>
+                                    <span className="popularity-score">{wrappedInsights.popularity_ranking.score}</span>
+                                </div>
+                                <div className="wrapped-classification">
+                                    {wrappedInsights.popularity_ranking.classification} Listener
+                                </div>
+                                <p className="wrapped-message">
+                                    {wrappedInsights.popularity_ranking.message}
+                                </p>
+                                <div className="popularity-bar">
+                                    <div 
+                                        className="popularity-fill" 
+                                        style={{width: `${wrappedInsights.popularity_ranking.score}%`}}
+                                    ></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* New vs Old Taste */}
+                        {wrappedInsights.new_vs_old && !wrappedInsights.new_vs_old.error && (
+                            <div className="wrapped-card">
+                                <div className="wrapped-header">
+                                    <Calendar size={24} className="wrapped-icon" />
+                                    <h3>New vs Classic</h3>
+                                </div>
+                                <div className="taste-split">
+                                    <div className="taste-section new">
+                                        <div className="taste-percentage">{wrappedInsights.new_vs_old.recent_percentage}%</div>
+                                        <div className="taste-label">Recent</div>
+                                    </div>
+                                    <div className="taste-divider"></div>
+                                    <div className="taste-section old">
+                                        <div className="taste-percentage">{100 - wrappedInsights.new_vs_old.recent_percentage}%</div>
+                                        <div className="taste-label">Classic</div>
+                                    </div>
+                                </div>
+                                <div className="wrapped-classification">
+                                    {wrappedInsights.new_vs_old.classification}
+                                </div>
+                                <p className="wrapped-message">
+                                    {wrappedInsights.new_vs_old.message}
+                                </p>
+                                <div className="wrapped-stats">
+                                    <span>Avg song age: {wrappedInsights.new_vs_old.avg_age} years</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Playlist Personality */}
+                        {wrappedInsights.playlist_personality && (
+                            <div className="wrapped-card">
+                                <div className="wrapped-header">
+                                    <Heart size={24} className="wrapped-icon" />
+                                    <h3>Playlist Personality</h3>
+                                </div>
+                                <div className="playlist-stats-grid">
+                                    <div className="playlist-stat">
+                                        <Clock size={20} />
+                                        <div>
+                                            <div className="stat-value">{wrappedInsights.playlist_personality.avg_duration}</div>
+                                            <div className="stat-label">Avg Track Length</div>
+                                        </div>
+                                    </div>
+                                    <div className="playlist-stat">
+                                        <Music size={20} />
+                                        <div>
+                                            <div className="stat-value">{wrappedInsights.playlist_personality.total_tracks}</div>
+                                            <div className="stat-label">Total Tracks</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="top-artist-highlight">
+                                    <Trophy size={20} />
+                                    <div>
+                                        <div className="highlight-label">Most Featured</div>
+                                        <div className="highlight-value">
+                                            {wrappedInsights.playlist_personality.most_common_artist}
+                                        </div>
+                                        <div className="highlight-count">
+                                            {wrappedInsights.playlist_personality.most_common_artist_count} tracks
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Release Year Trend Chart */}
+                    {wrappedInsights.release_trends && !wrappedInsights.release_trends.error && (
+                        <div className="section-card full-width">
+                            <h2 className="section-title">
+                                <Calendar size={24} />
+                                Release Year Trends
+                            </h2>
+                            <p className="section-description">
+                                {wrappedInsights.release_trends.message}
+                            </p>
+                            <ResponsiveContainer width="100%" height={350}>
+                                <AreaChart data={getReleaseYearTrend()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                    <defs>
+                                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#1DB954" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#1DB954" stopOpacity={0.1}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                    <XAxis 
+                                        dataKey="year" 
+                                        tick={{ fill: '#666', fontSize: 12 }}
+                                        label={{ value: 'Release Year', position: 'insideBottom', offset: -10 }}
+                                    />
+                                    <YAxis 
+                                        tick={{ fill: '#666' }}
+                                        label={{ value: 'Track Count', angle: -90, position: 'insideLeft' }}
+                                    />
+                                    <Tooltip 
+                                        contentStyle={{ 
+                                            backgroundColor: 'white', 
+                                            border: '2px solid #1DB954', 
+                                            borderRadius: '12px',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                        }}
+                                        labelStyle={{ color: '#181818', fontWeight: 'bold' }}
+                                    />
+                                    <Area 
+                                        type="monotone" 
+                                        dataKey="count" 
+                                        stroke="#1DB954" 
+                                        strokeWidth={3}
+                                        fillOpacity={1} 
+                                        fill="url(#colorCount)" 
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+
+                    {/* Top Artists with Share Percentage */}
+                    {wrappedInsights.top_artists_with_share && (
+                        <div className="section-card full-width">
+                            <h2 className="section-title">
+                                <Trophy size={24} />
+                                Your Top Artists
+                            </h2>
+                            <p className="section-description">
+                                Artists that dominate your listening
+                            </p>
+                            <ResponsiveContainer width="100%" height={400}>
+                                <BarChart data={getTopArtistsChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                    <XAxis 
+                                        dataKey="name" 
+                                        angle={-45} 
+                                        textAnchor="end" 
+                                        height={100}
+                                        tick={{ fill: '#666', fontSize: 12 }}
+                                    />
+                                    <YAxis 
+                                        tick={{ fill: '#666' }}
+                                        label={{ value: 'Share %', angle: -90, position: 'insideLeft' }}
+                                    />
+                                    <Tooltip 
+                                        contentStyle={{ 
+                                            backgroundColor: 'white', 
+                                            border: '2px solid #1DB954', 
+                                            borderRadius: '12px',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                        }}
+                                        labelStyle={{ color: '#181818', fontWeight: 'bold' }}
+                                        formatter={(value, name) => {
+                                            if (name === 'share') return [`${value}%`, 'Share']
+                                            if (name === 'count') return [`${value} tracks`, 'Count']
+                                            return [value, name]
+                                        }}
+                                    />
+                                    <Bar dataKey="share" fill="#1DB954" radius={[8, 8, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+
+                    {/* Genre Distribution Pie Chart */}
+                    {getGenreDistribution().length > 0 && (
+                        <div className="section-card">
+                            <h2 className="section-title">
+                                <Music size={24} />
+                                Genre Distribution
+                            </h2>
+                            <ResponsiveContainer width="100%" height={400}>
+                                <PieChart>
+                                    <Pie
+                                        data={getGenreDistribution()}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={true}
+                                        label={({ name, percentage }) => `${name}: ${percentage}%`}
+                                        outerRadius={120}
+                                        fill="#1DB954"
+                                        dataKey="value"
+                                    >
+                                        {getGenreDistribution().map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip 
+                                        contentStyle={{ 
+                                            backgroundColor: 'white', 
+                                            border: '2px solid #1DB954', 
+                                            borderRadius: '12px',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                        }}
+                                        labelStyle={{ color: '#181818', fontWeight: 'bold' }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+
+                    {/* Time-Based Listening Patterns */}
+                    {wrappedInsights.time_patterns && !wrappedInsights.time_patterns.error && (
+                        <>
+                            {/* Time Personality Card */}
+                            <div className="section-card full-width">
+                                <div className="time-personality-hero">
+                                    <Clock size={48} className="time-icon" />
+                                    <div>
+                                        <h2 className="time-personality-title">
+                                            {wrappedInsights.time_patterns.time_personality}
+                                        </h2>
+                                        <p className="time-personality-message">
+                                            {wrappedInsights.time_patterns.time_message}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Hourly Listening Pattern */}
+                            <div className="section-card full-width">
+                                <h2 className="section-title">
+                                    <Clock size={24} />
+                                    Listening by Hour
+                                </h2>
+                                <p className="section-description">
+                                    When you tune in throughout the day
+                                </p>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={wrappedInsights.time_patterns.hourly_data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                        <XAxis 
+                                            dataKey="hour" 
+                                            tick={{ fill: '#666', fontSize: 12 }}
+                                            label={{ value: 'Hour of Day', position: 'insideBottom', offset: -10 }}
+                                        />
+                                        <YAxis 
+                                            tick={{ fill: '#666' }}
+                                            label={{ value: 'Plays', angle: -90, position: 'insideLeft' }}
+                                        />
+                                        <Tooltip 
+                                            contentStyle={{ 
+                                                backgroundColor: 'white', 
+                                                border: '2px solid #1DB954', 
+                                                borderRadius: '12px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                            }}
+                                            labelStyle={{ color: '#181818', fontWeight: 'bold' }}
+                                            formatter={(value, name, props) => [
+                                                `${value} plays`,
+                                                props.payload.period
+                                            ]}
+                                        />
+                                        <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                                            {wrappedInsights.time_patterns.hourly_data.map((entry, index) => (
+                                                <Cell 
+                                                    key={`cell-${index}`} 
+                                                    fill={entry.hour === wrappedInsights.time_patterns.peak_hour ? '#1DB954' : '#b3e5d1'}
+                                                />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Daily Listening Pattern */}
+                            <div className="section-card full-width">
+                                <h2 className="section-title">
+                                    <Calendar size={24} />
+                                    Listening by Day of Week
+                                </h2>
+                                <p className="section-description">
+                                    Your weekly listening rhythm
+                                </p>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={wrappedInsights.time_patterns.daily_data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                        <XAxis 
+                                            dataKey="day" 
+                                            tick={{ fill: '#666', fontSize: 12 }}
+                                        />
+                                        <YAxis 
+                                            tick={{ fill: '#666' }}
+                                            label={{ value: 'Plays', angle: -90, position: 'insideLeft' }}
+                                        />
+                                        <Tooltip 
+                                            contentStyle={{ 
+                                                backgroundColor: 'white', 
+                                                border: '2px solid #1DB954', 
+                                                borderRadius: '12px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                            }}
+                                            labelStyle={{ color: '#181818', fontWeight: 'bold' }}
+                                            formatter={(value) => [`${value} plays`, 'Count']}
+                                        />
+                                        <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                                            {wrappedInsights.time_patterns.daily_data.map((entry, index) => (
+                                                <Cell 
+                                                    key={`cell-${index}`} 
+                                                    fill={entry.day === wrappedInsights.time_patterns.peak_day ? '#1DB954' : '#b3e5d1'}
+                                                />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </>
+                    )}
+                    
                     {/* Overview Stats */}
                     <div className="stats-grid">
                         <div className="stat-card">

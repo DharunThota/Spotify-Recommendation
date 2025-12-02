@@ -41,4 +41,12 @@ export const getHybridRecommendations = async (songIds, mood = null, numRecommen
     return response.data
 }
 
+// Analytics API calls
+export const getWrappedInsights = async (timeRange = 'medium_term') => {
+    const response = await api.get('/api/analytics/wrapped-insights', {
+        params: { time_range: timeRange }
+    })
+    return response.data
+}
+
 export default api

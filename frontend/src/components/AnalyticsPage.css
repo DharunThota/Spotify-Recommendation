@@ -1,4 +1,4 @@
-/* Analytics Page - Enhanced Styles */
+/* Analytics Page - Enhanced Styles with Wrapped Insights */
 
 .analytics-page {
     min-height: calc(100vh - 70px);
@@ -233,7 +233,340 @@
     gap: 2rem;
 }
 
-/* Stats Grid */
+/* Music Identity Hero Section */
+.identity-hero {
+    margin-bottom: 1rem;
+}
+
+.identity-card {
+    background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(29, 185, 84, 0.4);
+    animation: slideUp 0.6s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.identity-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.03)" /></svg>');
+    animation: float 20s linear infinite;
+}
+
+.identity-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.identity-icon {
+    color: white;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+}
+
+.identity-title {
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+    margin: 0;
+}
+
+.identity-type {
+    font-size: 3rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.identity-description {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.95);
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto 1rem;
+}
+
+.identity-secondary {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.85);
+    font-style: italic;
+}
+
+/* Wrapped Insights Grid */
+.wrapped-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.wrapped-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    border: 2px solid rgba(29, 185, 84, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: slideUp 0.6s ease-out;
+}
+
+.wrapped-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(29, 185, 84, 0.2);
+    border-color: #1DB954;
+}
+
+.wrapped-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.wrapped-icon {
+    color: #1DB954;
+}
+
+.wrapped-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #181818;
+    margin: 0;
+}
+
+/* Score Circle */
+.score-circle {
+    width: 160px;
+    height: 160px;
+    margin: 1.5rem auto;
+}
+
+.score-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.score-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    fill: #1DB954;
+}
+
+.score-label {
+    font-size: 1rem;
+    fill: #999;
+}
+
+/* Wrapped Classification & Message */
+.wrapped-classification {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1DB954;
+    margin-bottom: 1rem;
+}
+
+.wrapped-message {
+    text-align: center;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.wrapped-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #999;
+}
+
+/* Popularity Badge */
+.popularity-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.popularity-emoji {
+    font-size: 4rem;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.popularity-score {
+    font-size: 4rem;
+    font-weight: 900;
+    color: #1DB954;
+}
+
+.popularity-bar {
+    width: 100%;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.popularity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1DB954 0%, #1ed760 100%);
+    transition: width 1s ease-out;
+    border-radius: 6px;
+}
+
+/* Taste Split */
+.taste-split {
+    display: flex;
+    align-items: stretch;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.taste-section {
+    flex: 1;
+    text-align: center;
+}
+
+.taste-section.new .taste-percentage {
+    color: #1DB954;
+}
+
+.taste-section.old .taste-percentage {
+    color: #ff6b6b;
+}
+
+.taste-percentage {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.taste-label {
+    font-size: 1rem;
+    color: #999;
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.taste-divider {
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, #e0e0e0, transparent);
+}
+
+/* Playlist Stats Grid */
+.playlist-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.playlist-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+}
+
+.playlist-stat svg {
+    color: #1DB954;
+    flex-shrink: 0;
+}
+
+.playlist-stat .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #181818;
+}
+
+.playlist-stat .stat-label {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.top-artist-highlight {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(29, 185, 84, 0.05), rgba(30, 215, 96, 0.02));
+    border-radius: 12px;
+    border: 1px solid rgba(29, 185, 84, 0.2);
+}
+
+.top-artist-highlight svg {
+    color: #FFD700;
+    flex-shrink: 0;
+}
+
+.highlight-label {
+    font-size: 0.8rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.highlight-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #181818;
+}
+
+.highlight-count {
+    font-size: 0.9rem;
+    color: #1DB954;
+    font-weight: 600;
+}
+
+/* Time Personality Hero */
+.time-personality-hero {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(30, 215, 96, 0.05));
+    border-radius: 16px;
+    border: 2px solid rgba(29, 185, 84, 0.3);
+}
+
+.time-icon {
+    color: #1DB954;
+    flex-shrink: 0;
+}
+
+.time-personality-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #181818;
+    margin: 0 0 0.5rem;
+}
+
+.time-personality-message {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+}
+
+/* Section Cards */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

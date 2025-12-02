@@ -687,6 +687,25 @@ async def get_visualizations(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/analytics/wrapped-insights")
+async def get_wrapped_insights(
+    time_range: str = Query('medium_term', pattern='^(short_term|medium_term|long_term)$')
+):
+    """Get Spotify-Wrapped style comprehensive insights."""
+    try:
+        if not analytics_engine.sp:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        insights = analytics_engine.get_wrapped_insights(time_range)
+        return sanitize_for_json(insights)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating wrapped insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
