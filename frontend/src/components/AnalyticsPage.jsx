@@ -663,7 +663,7 @@ function AnalyticsPage() {
 
                     {/* Visualizations Row */}
                     <div className="charts-row">
-                        {/* Music Personality Radar Chart */}
+                        {/* Music Personality Radar Chart
                         {dashboard.listening_patterns?.audio_features && dashboard.listening_patterns?.has_audio_features ? (
                             <div className="section-card chart-card">
                                 <h2 className="section-title">
@@ -703,7 +703,7 @@ function AnalyticsPage() {
                                     You can still view your top tracks, artists, and listening patterns below!
                                 </p>
                             </div>
-                        ) : null}
+                        ) : null} */}
 
                         {/* Genre Distribution Pie Chart */}
                         {getGenreDistribution().length > 0 && (
@@ -742,35 +742,6 @@ function AnalyticsPage() {
                             </div>
                         )}
                     </div>
-
-                    {/* Top Artists Bar Chart
-                    {getTopArtistsChartData().length > 0 && (
-                        <div className="section-card full-width">
-                            <h2 className="section-title">
-                                <span className="title-icon">📊</span>
-                                Top Artists Breakdown
-                            </h2>
-                            <ResponsiveContainer width="100%" height={400}>
-                                <BarChart data={getTopArtistsChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                                    <XAxis 
-                                        dataKey="name" 
-                                        angle={-45} 
-                                        textAnchor="end" 
-                                        height={100}
-                                        tick={{ fill: '#b3b3b3', fontSize: 12 }}
-                                    />
-                                    <YAxis tick={{ fill: '#b3b3b3' }} />
-                                    <Tooltip 
-                                        contentStyle={{ backgroundColor: '#282828', border: '1px solid #1DB954', borderRadius: '8px' }}
-                                        labelStyle={{ color: '#fff' }}
-                                        cursor={{ fill: 'rgba(29, 185, 84, 0.1)' }}
-                                    />
-                                    <Bar dataKey="plays" fill="#1DB954" radius={[8, 8, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    )} */}
 
                     {/* Top Artists */}
                     {dashboard.top_artists && dashboard.top_artists.length > 0 && (
