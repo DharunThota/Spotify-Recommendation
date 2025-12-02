@@ -61,8 +61,9 @@
 
 .recommendations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: var(--spacing-xl);
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    max-width: 900px;
 }
 
 /* Popular Badge for Song Cards */
@@ -81,8 +82,8 @@
     letter-spacing: 0.03em;
 }
 
-.popular-badge-icon {
-    font-size: 0.9rem;
+.popular-badge svg {
+    flex-shrink: 0;
 }
 
 

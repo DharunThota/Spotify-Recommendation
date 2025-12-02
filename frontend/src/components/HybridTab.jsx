@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Smile, Wind, CloudRain, Zap, Flame } from 'lucide-react'
 import SongSearch from './SongSearch'
 import SongCard from './SongCard'
 import { getHybridRecommendations } from '../services/api'
@@ -14,10 +15,10 @@ function HybridTab() {
     const [popularOnly, setPopularOnly] = useState(false)
 
     const moods = [
-        { id: 'happy', label: 'Happy', emoji: '😊' },
-        { id: 'chill', label: 'Chill', emoji: '😌' },
-        { id: 'sad', label: 'Sad', emoji: '😢' },
-        { id: 'energetic', label: 'Energetic', emoji: '⚡' }
+        { id: 'happy', label: 'Happy', icon: Smile },
+        { id: 'chill', label: 'Chill', icon: Wind },
+        { id: 'sad', label: 'Sad', icon: CloudRain },
+        { id: 'energetic', label: 'Energetic', icon: Zap }
     ]
 
     const handleSongSelect = (song) => {
@@ -121,22 +122,24 @@ function HybridTab() {
                         />
                         <span className="toggle-slider"></span>
                         <span className="toggle-label">
-                            <span className="toggle-icon">🔥</span>
                             Popular Only
                         </span>
                     </label>
                 </div>
                 <div className="mood-filter">
-                    {moods.map(mood => (
-                        <button
-                            key={mood.id}
-                            className={`mood-filter-button ${selectedMood?.id === mood.id ? 'active' : ''}`}
-                            onClick={() => handleMoodToggle(mood)}
-                        >
-                            <span className="mood-emoji-small">{mood.emoji}</span>
-                            {mood.label}
-                        </button>
-                    ))}
+                    {moods.map(mood => {
+                        const IconComponent = mood.icon
+                        return (
+                            <button
+                                key={mood.id}
+                                className={`mood-filter-button ${selectedMood?.id === mood.id ? 'active' : ''}`}
+                                onClick={() => handleMoodToggle(mood)}
+                            >
+                                <IconComponent size={18} />
+                                {mood.label}
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
 
@@ -167,7 +170,7 @@ function HybridTab() {
                         <span className="count-badge">{recommendations.length}</span>
                         {popularOnly && (
                             <span className="popular-badge">
-                                <span className="popular-badge-icon">🔥</span>
+                                <Flame size={14} />
                                 Popular
                             </span>
                         )}
@@ -193,7 +196,7 @@ function HybridTab() {
 
             {!isLoading && selectedSongs.length === 0 && (
                 <div className="empty-state">
-                    <h3>🎭 Hybrid Recommendations</h3>
+                    <h3>Hybrid Recommendations</h3>
                     <p>Add multiple songs and optionally select a mood to get personalized recommendations</p>
                 </div>
             )}

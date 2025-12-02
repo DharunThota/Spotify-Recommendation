@@ -106,6 +106,10 @@
     gap: 6px;
 }
 
+.mood-filter-button svg {
+    flex-shrink: 0;
+}
+
 .mood-filter-button:hover:not(.active) {
     background: #efefef;
     color: var(--text-primary);
@@ -118,10 +122,6 @@
     border-color: transparent;
     box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
     font-weight: 700;
-}
-
-.mood-emoji-small {
-    font-size: 1rem;
 }
 
 .get-recommendations-button {

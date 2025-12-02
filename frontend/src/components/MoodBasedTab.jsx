@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Smile, Wind, CloudRain, Zap, Flame } from 'lucide-react'
 import SongCard from './SongCard'
 import { getMoodRecommendations } from '../services/api'
 import './Tab.css'
@@ -12,10 +13,10 @@ function MoodBasedTab() {
     const [popularOnly, setPopularOnly] = useState(false)
 
     const moods = [
-        { id: 'happy', label: 'Happy', emoji: '😊', color: '#FFD700' },
-        { id: 'chill', label: 'Chill', emoji: '😌', color: '#87CEEB' },
-        { id: 'sad', label: 'Sad', emoji: '😢', color: '#9370DB' },
-        { id: 'energetic', label: 'Energetic', emoji: '⚡', color: '#FF6347' }
+        { id: 'happy', label: 'Happy', icon: Smile, color: '#FFD700' },
+        { id: 'chill', label: 'Chill', icon: Wind, color: '#87CEEB' },
+        { id: 'sad', label: 'Sad', icon: CloudRain, color: '#9370DB' },
+        { id: 'energetic', label: 'Energetic', icon: Zap, color: '#FF6347' }
     ]
 
     const handleMoodSelect = async (mood, isPopular = popularOnly) => {
@@ -75,25 +76,27 @@ function MoodBasedTab() {
                         />
                         <span className="toggle-slider"></span>
                         <span className="toggle-label">
-                            <span className="toggle-icon">🔥</span>
                             Popular Only
                         </span>
                     </label>
                 </div>
                 <div className="mood-grid">
-                    {moods.map(mood => (
-                        <button
-                            key={mood.id}
-                            className={`mood-button ${selectedMood?.id === mood.id ? 'active' : ''}`}
-                            onClick={() => handleMoodSelect(mood)}
-                            style={{
-                                '--mood-color': mood.color
-                            }}
-                        >
-                            <span className="mood-emoji">{mood.emoji}</span>
-                            <span className="mood-label">{mood.label}</span>
-                        </button>
-                    ))}
+                    {moods.map(mood => {
+                        const IconComponent = mood.icon
+                        return (
+                            <button
+                                key={mood.id}
+                                className={`mood-button ${selectedMood?.id === mood.id ? 'active' : ''}`}
+                                onClick={() => handleMoodSelect(mood)}
+                                style={{
+                                    '--mood-color': mood.color
+                                }}
+                            >
+                                <IconComponent className="mood-icon" size={40} strokeWidth={2} />
+                                <span className="mood-label">{mood.label}</span>
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
 
@@ -110,11 +113,11 @@ function MoodBasedTab() {
             {!isLoading && recommendations.length > 0 && (
                 <div className="section">
                     <h2 className="section-title">
-                        {selectedMood?.emoji} {selectedMood?.label} Songs
+                        {selectedMood?.label} Songs
                         <span className="count-badge">{recommendations.length}</span>
                         {popularOnly && (
                             <span className="popular-badge">
-                                <span className="popular-badge-icon">🔥</span>
+                                <Flame size={14} />
                                 Popular
                             </span>
                         )}
@@ -140,7 +143,7 @@ function MoodBasedTab() {
 
             {!isLoading && !selectedMood && (
                 <div className="empty-state">
-                    <h3>😊 Choose Your Mood</h3>
+                    <h3>Choose Your Mood</h3>
                     <p>Select a mood above to discover songs that match your vibe</p>
                 </div>
             )}

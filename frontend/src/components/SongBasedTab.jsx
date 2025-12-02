@@ -93,7 +93,7 @@ function SongBasedTab() {
 
             {!isLoading && !selectedSong && (
                 <div className="empty-state">
-                    <h3>🎵 Get Started</h3>
+                    <h3>Get Started</h3>
                     <p>Search and select a song to receive personalized recommendations</p>
                 </div>
             )}

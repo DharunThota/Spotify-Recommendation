@@ -89,6 +89,15 @@
     letter-spacing: 0.01em;
 }
 
+.meta-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.song-meta-item svg {
+    flex-shrink: 0;
+}
+
 .remove-button {
     background: var(--background);
     border: 1px solid var(--border);

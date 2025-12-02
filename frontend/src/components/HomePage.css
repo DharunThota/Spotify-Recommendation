@@ -73,13 +73,13 @@
 }
 
 .badge-icon {
-    font-size: 1.2rem;
     animation: sparkle 2s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
 @keyframes sparkle {
     0%, 100% { transform: scale(1) rotate(0deg); }
-    50% { transform: scale(1.2) rotate(180deg); }
+    50% { transform: scale(1.15) rotate(180deg); }
 }
 
 .hero-title {
@@ -178,12 +178,20 @@
 }
 
 .button-icon {
-    font-size: 1.2rem;
     transition: transform var(--transition-base);
+    flex-shrink: 0;
 }
 
 .cta-button:hover .button-icon {
     transform: translateX(4px);
+}
+
+.cta-button.secondary .button-icon {
+    transform: none;
+}
+
+.cta-button.secondary:hover .button-icon {
+    transform: scale(1.1);
 }
 
 /* Stats Bar */
@@ -288,12 +296,18 @@
     50% { height: 100%; }
 }
 
-/* Emoji Grid */
-.emoji-grid {
+/* Feature List */
+.feature-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-md);
     font-size: 2rem;
+    color: #1DB954;
+}
+
+.feature-list svg {
+    width: 100%;
+    height: auto;
 }
 
 /* Progress Indicator */

@@ -1,4 +1,5 @@
 import React from 'react'
+import { Calendar, TrendingUp, X } from 'lucide-react'
 import './SongCard.css'
 
 function SongCard({ song, showExplanation = false, onRemove = null }) {
@@ -9,15 +10,21 @@ function SongCard({ song, showExplanation = false, onRemove = null }) {
                     <h3 className="song-card-title">{song.name}</h3>
                     <p className="song-card-artist">{song.artists}</p>
                     <div className="song-card-meta">
-                        <span className="song-meta-item">📅 {song.year}</span>
+                        <span className="song-meta-item">
+                            <Calendar size={14} />
+                            <span className="meta-label">Year:</span> {song.year}
+                        </span>
                         {song.popularity !== undefined && (
-                            <span className="song-meta-item">⭐ {song.popularity}</span>
+                            <span className="song-meta-item">
+                                <TrendingUp size={14} />
+                                <span className="meta-label">Popularity:</span> {song.popularity}
+                            </span>
                         )}
                     </div>
                 </div>
                 {onRemove && (
                     <button className="remove-button" onClick={onRemove}>
-                        ✕
+                        <X size={16} />
                     </button>
                 )}
             </div>
