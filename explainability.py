@@ -150,13 +150,14 @@ class ExplainabilityEngine:
                 input_song = self.processor.get_song_by_index(input_idx)
                 similarity = self.engine.compute_similarity(input_idx, recommended_idx)
                 input_songs.append(input_song)
-                similarities.append(similarity)
+                # Ensure similarity is a float
+                similarities.append(float(similarity))
         
         if not input_songs:
             return {}
         
         # Calculate average similarity
-        avg_similarity = np.mean(similarities)
+        avg_similarity = float(np.mean(similarities))
         
         # Find most similar input song
         most_similar_idx = np.argmax(similarities)
@@ -174,16 +175,16 @@ class ExplainabilityEngine:
         return {
             'average_similarity': float(avg_similarity),
             'most_similar_to': {
-                'name': most_similar_song['name'],
-                'artists': most_similar_song['artists']
+                'name': str(most_similar_song['name']),
+                'artists': str(most_similar_song['artists'])
             },
             'explanation': explanation_text,
             'mood_filter': mood,
             'recommended_song': {
-                'name': recommended_song['name'],
-                'artists': recommended_song['artists'],
-                'year': int(recommended_song['year']),
-                'popularity': int(recommended_song['popularity'])
+                'name': str(recommended_song['name']),
+                'artists': str(recommended_song['artists']),
+                'year': int(float(recommended_song['year'])) if recommended_song['year'] else 0,
+                'popularity': int(float(recommended_song['popularity'])) if recommended_song['popularity'] else 0
             }
         }
     
@@ -436,14 +437,14 @@ class ExplainabilityEngine:
         
         return ' '.join(parts)
     
-    def _generate_hybrid_explanation(
+    def _generate_sequence_hybrid_explanation(
         self,
         recommended_song: Dict,
         content_score: float,
         seq_explanation: Dict,
         context_indices: List[int]
     ) -> str:
-        """Generate natural language explanation for hybrid recommendation."""
+        """Generate natural language explanation for sequence-aware hybrid recommendation."""
         parts = []
         
         # Sequence pattern part
@@ -519,7 +520,7 @@ class ExplainabilityEngine:
             "sequence_pattern": seq_explanation.get("pattern"),
             "pattern_support": seq_explanation.get("support", 0.0),
             "pattern_confidence": seq_explanation.get("confidence", 0.0),
-            "explanation": self._generate_hybrid_explanation(
+            "explanation": self._generate_sequence_hybrid_explanation(
                 recommended_song,
                 content_score,
                 seq_explanation,

@@ -412,10 +412,14 @@ async def recommend_hybrid(request: HybridRecommendationRequest):
             mood=request.mood,
             n_recommendations=request.n_recommendations
         )
-        logger.info(f"Generated {len(recommendations)} hybrid recommendations")
+        logger.info(f"Generated {len(recommendations)} hybrid recommendations with mood={request.mood}")
         
         if not recommendations:
-            raise HTTPException(status_code=404, detail="No recommendations available")
+            logger.warning(f"No hybrid recommendations found for songs={request.song_ids}, mood={request.mood}")
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No recommendations found. Try removing the mood filter or selecting different songs."
+            )
         
         # Build response with explanations
         response_list = []
@@ -475,6 +479,7 @@ async def recommend_hybrid(request: HybridRecommendationRequest):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error in hybrid recommendations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

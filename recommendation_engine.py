@@ -108,7 +108,8 @@ class RecommendationEngine:
                 artist_penalty = 0.5
             
             # Boost for popularity (slightly)
-            popularity_boost = 1.0 + (candidate_song['popularity'] / 1000.0)
+            popularity = float(candidate_song['popularity']) if candidate_song['popularity'] else 0
+            popularity_boost = 1.0 + (popularity / 1000.0)
             
             final_score = similarity_score * artist_penalty * popularity_boost
             
@@ -238,10 +239,24 @@ class RecommendationEngine:
             final_score = avg_score * (1.0 + count_bonus * 0.5)
             aggregated.append((idx, final_score))
         
+        logger.info(f"Aggregated {len(aggregated)} hybrid recommendations before mood filter")
+        
         # Apply mood filter if specified
         if mood and mood in config.MOOD_CRITERIA:
             mood_indices = set(self.processor.get_songs_by_mood(mood, limit=1000))
-            aggregated = [(idx, score) for idx, score in aggregated if idx in mood_indices]
+            logger.info(f"Mood filter '{mood}': found {len(mood_indices)} matching songs")
+            
+            if not mood_indices:
+                logger.warning(f"No songs found for mood '{mood}' - returning unfiltered results")
+            else:
+                filtered = [(idx, score) for idx, score in aggregated if idx in mood_indices]
+                logger.info(f"After mood filter: {len(filtered)} recommendations")
+                
+                # Only apply filter if we have results, otherwise return unfiltered
+                if filtered:
+                    aggregated = filtered
+                else:
+                    logger.warning(f"Mood filter removed all results - returning unfiltered recommendations")
         
         # Sort and return
         aggregated.sort(key=lambda x: x[1], reverse=True)

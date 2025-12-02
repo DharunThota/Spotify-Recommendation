@@ -84,12 +84,16 @@ function HybridTab() {
             setRecommendations(transformedRecs)
         } catch (err) {
             console.error('Error fetching hybrid recommendations:', err)
+            console.error('Error details:', err.response?.data)
+            
             // Check if it's a 404 with no recommendations
             if (err.response?.status === 404 || err.response?.data?.detail?.includes('No recommendations')) {
                 setRecommendations([])
                 setError(null) // Don't show error, just empty state
+            } else if (err.response?.status === 400) {
+                setError(err.response?.data?.detail || 'Invalid request. Please check your selections.')
             } else {
-                setError('Failed to fetch recommendations. Please try again.')
+                setError(err.response?.data?.detail || 'Failed to fetch recommendations. Please try again.')
             }
         } finally {
             setIsLoading(false)
