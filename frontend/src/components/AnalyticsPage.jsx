@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-         PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, 
-         Tooltip, Legend, LineChart, Line, Area, AreaChart } from 'recharts'
+import {
+    BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+    PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
+    Tooltip, Legend, LineChart, Line, Area, AreaChart
+} from 'recharts'
 import { Music, TrendingUp, Users, Clock, Trophy, Sparkles, Calendar, Target, Heart, Zap } from 'lucide-react'
 import { getWrappedInsights } from '../services/api'
 import './AnalyticsPage.css'
@@ -38,13 +40,13 @@ function AnalyticsPage() {
             setLoading(true)
             const response = await fetch('http://localhost:8000/api/analytics/auth-url')
             const data = await response.json()
-            
+
             // Open Spotify auth in popup
             const width = 600
             const height = 700
             const left = window.screen.width / 2 - width / 2
             const top = window.screen.height / 2 - height / 2
-            
+
             window.open(
                 data.auth_url,
                 'Spotify Login',
@@ -64,15 +66,15 @@ function AnalyticsPage() {
             const response = await fetch(
                 `http://localhost:8000/api/analytics/dashboard?time_range=${timeRange}`
             )
-            
+
             if (!response.ok) {
                 throw new Error('Failed to load dashboard')
             }
-            
+
             const data = await response.json()
             setDashboard(data)
             setActiveTimeRange(timeRange)
-            
+
             // Load associations separately
             loadAssociations()
         } catch (error) {
@@ -97,7 +99,7 @@ function AnalyticsPage() {
             const response = await fetch(
                 'http://localhost:8000/api/analytics/associations?limit=50&min_support=0.15&min_confidence=0.6'
             )
-            
+
             if (response.ok) {
                 const data = await response.json()
                 setAssociations(data)
@@ -119,7 +121,7 @@ function AnalyticsPage() {
     }
 
     const COLORS = ['#1DB954', '#1ed760', '#169c46', '#117a37', '#0d5c29', '#1DB954', '#1ed760', '#169c46', '#117a37', '#0d5c29']
-    
+
     // Prepare chart data
     const getAudioFeaturesChartData = () => {
         if (!dashboard?.listening_patterns?.audio_features) return []
@@ -163,7 +165,7 @@ function AnalyticsPage() {
                             Connect your Spotify account to unlock personalized insights about your listening habits,
                             discover patterns in your music taste, and get AI-powered recommendations.
                         </p>
-                        
+
                         <div className="features-list">
                             <div className="feature-item">
                                 <span className="feature-icon">🎵</span>
@@ -196,7 +198,7 @@ function AnalyticsPage() {
                             ) : (
                                 <>
                                     <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
                                     </svg>
                                     <span>Connect with Spotify</span>
                                 </>
@@ -344,9 +346,9 @@ function AnalyticsPage() {
                                     {wrappedInsights.popularity_ranking.message}
                                 </p>
                                 <div className="popularity-bar">
-                                    <div 
-                                        className="popularity-fill" 
-                                        style={{width: `${wrappedInsights.popularity_ranking.score}%`}}
+                                    <div
+                                        className="popularity-fill"
+                                        style={{ width: `${wrappedInsights.popularity_ranking.score}%` }}
                                     ></div>
                                 </div>
                             </div>
@@ -435,36 +437,36 @@ function AnalyticsPage() {
                                 <AreaChart data={getReleaseYearTrend()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                                     <defs>
                                         <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#1DB954" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#1DB954" stopOpacity={0.1}/>
+                                            <stop offset="5%" stopColor="#1DB954" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#1DB954" stopOpacity={0.1} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                                    <XAxis 
-                                        dataKey="year" 
+                                    <XAxis
+                                        dataKey="year"
                                         tick={{ fill: '#666', fontSize: 12 }}
                                         label={{ value: 'Release Year', position: 'insideBottom', offset: -10 }}
                                     />
-                                    <YAxis 
+                                    <YAxis
                                         tick={{ fill: '#666' }}
                                         label={{ value: 'Track Count', angle: -90, position: 'insideLeft' }}
                                     />
-                                    <Tooltip 
-                                        contentStyle={{ 
-                                            backgroundColor: 'white', 
-                                            border: '2px solid #1DB954', 
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'white',
+                                            border: '2px solid #1DB954',
                                             borderRadius: '12px',
                                             boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                         }}
                                         labelStyle={{ color: '#181818', fontWeight: 'bold' }}
                                     />
-                                    <Area 
-                                        type="monotone" 
-                                        dataKey="count" 
-                                        stroke="#1DB954" 
+                                    <Area
+                                        type="monotone"
+                                        dataKey="count"
+                                        stroke="#1DB954"
                                         strokeWidth={3}
-                                        fillOpacity={1} 
-                                        fill="url(#colorCount)" 
+                                        fillOpacity={1}
+                                        fill="url(#colorCount)"
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -484,21 +486,21 @@ function AnalyticsPage() {
                             <ResponsiveContainer width="100%" height={400}>
                                 <BarChart data={getTopArtistsChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                                    <XAxis 
-                                        dataKey="name" 
-                                        angle={-45} 
-                                        textAnchor="end" 
+                                    <XAxis
+                                        dataKey="name"
+                                        angle={-45}
+                                        textAnchor="end"
                                         height={100}
                                         tick={{ fill: '#666', fontSize: 12 }}
                                     />
-                                    <YAxis 
+                                    <YAxis
                                         tick={{ fill: '#666' }}
                                         label={{ value: 'Share %', angle: -90, position: 'insideLeft' }}
                                     />
-                                    <Tooltip 
-                                        contentStyle={{ 
-                                            backgroundColor: 'white', 
-                                            border: '2px solid #1DB954', 
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'white',
+                                            border: '2px solid #1DB954',
                                             borderRadius: '12px',
                                             boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                         }}
@@ -511,43 +513,6 @@ function AnalyticsPage() {
                                     />
                                     <Bar dataKey="share" fill="#1DB954" radius={[8, 8, 0, 0]} />
                                 </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    )}
-
-                    {/* Genre Distribution Pie Chart */}
-                    {getGenreDistribution().length > 0 && (
-                        <div className="section-card">
-                            <h2 className="section-title">
-                                <Music size={24} />
-                                Genre Distribution
-                            </h2>
-                            <ResponsiveContainer width="100%" height={400}>
-                                <PieChart>
-                                    <Pie
-                                        data={getGenreDistribution()}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={true}
-                                        label={({ name, percentage }) => `${name}: ${percentage}%`}
-                                        outerRadius={120}
-                                        fill="#1DB954"
-                                        dataKey="value"
-                                    >
-                                        {getGenreDistribution().map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip 
-                                        contentStyle={{ 
-                                            backgroundColor: 'white', 
-                                            border: '2px solid #1DB954', 
-                                            borderRadius: '12px',
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                                        }}
-                                        labelStyle={{ color: '#181818', fontWeight: 'bold' }}
-                                    />
-                                </PieChart>
                             </ResponsiveContainer>
                         </div>
                     )}
@@ -582,19 +547,19 @@ function AnalyticsPage() {
                                 <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={wrappedInsights.time_patterns.hourly_data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                                        <XAxis 
-                                            dataKey="hour" 
+                                        <XAxis
+                                            dataKey="hour"
                                             tick={{ fill: '#666', fontSize: 12 }}
                                             label={{ value: 'Hour of Day', position: 'insideBottom', offset: -10 }}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                             tick={{ fill: '#666' }}
                                             label={{ value: 'Plays', angle: -90, position: 'insideLeft' }}
                                         />
-                                        <Tooltip 
-                                            contentStyle={{ 
-                                                backgroundColor: 'white', 
-                                                border: '2px solid #1DB954', 
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'white',
+                                                border: '2px solid #1DB954',
                                                 borderRadius: '12px',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                             }}
@@ -606,8 +571,8 @@ function AnalyticsPage() {
                                         />
                                         <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                                             {wrappedInsights.time_patterns.hourly_data.map((entry, index) => (
-                                                <Cell 
-                                                    key={`cell-${index}`} 
+                                                <Cell
+                                                    key={`cell-${index}`}
                                                     fill={entry.hour === wrappedInsights.time_patterns.peak_hour ? '#1DB954' : '#b3e5d1'}
                                                 />
                                             ))}
@@ -628,18 +593,18 @@ function AnalyticsPage() {
                                 <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={wrappedInsights.time_patterns.daily_data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                                        <XAxis 
-                                            dataKey="day" 
+                                        <XAxis
+                                            dataKey="day"
                                             tick={{ fill: '#666', fontSize: 12 }}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                             tick={{ fill: '#666' }}
                                             label={{ value: 'Plays', angle: -90, position: 'insideLeft' }}
                                         />
-                                        <Tooltip 
-                                            contentStyle={{ 
-                                                backgroundColor: 'white', 
-                                                border: '2px solid #1DB954', 
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'white',
+                                                border: '2px solid #1DB954',
                                                 borderRadius: '12px',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                             }}
@@ -648,8 +613,8 @@ function AnalyticsPage() {
                                         />
                                         <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                                             {wrappedInsights.time_patterns.daily_data.map((entry, index) => (
-                                                <Cell 
-                                                    key={`cell-${index}`} 
+                                                <Cell
+                                                    key={`cell-${index}`}
                                                     fill={entry.day === wrappedInsights.time_patterns.peak_day ? '#1DB954' : '#b3e5d1'}
                                                 />
                                             ))}
@@ -659,7 +624,7 @@ function AnalyticsPage() {
                             </div>
                         </>
                     )}
-                    
+
                     {/* Overview Stats */}
                     <div className="stats-grid">
                         <div className="stat-card">
@@ -708,19 +673,19 @@ function AnalyticsPage() {
                                 <ResponsiveContainer width="100%" height={350}>
                                     <RadarChart data={getAudioFeaturesChartData()}>
                                         <PolarGrid stroke="#1DB954" strokeOpacity={0.2} />
-                                        <PolarAngleAxis 
-                                            dataKey="feature" 
+                                        <PolarAngleAxis
+                                            dataKey="feature"
                                             tick={{ fill: '#b3b3b3', fontSize: 12 }}
                                         />
                                         <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#b3b3b3' }} />
-                                        <Radar 
-                                            name="Audio Features" 
-                                            dataKey="value" 
-                                            stroke="#1DB954" 
-                                            fill="#1DB954" 
-                                            fillOpacity={0.6} 
+                                        <Radar
+                                            name="Audio Features"
+                                            dataKey="value"
+                                            stroke="#1DB954"
+                                            fill="#1DB954"
+                                            fillOpacity={0.6}
                                         />
-                                        <Tooltip 
+                                        <Tooltip
                                             contentStyle={{ backgroundColor: '#282828', border: '1px solid #1DB954', borderRadius: '8px' }}
                                             labelStyle={{ color: '#fff' }}
                                         />
@@ -734,7 +699,7 @@ function AnalyticsPage() {
                                     Audio Features Unavailable
                                 </h2>
                                 <p className="info-message">
-                                    Audio feature analysis is currently unavailable due to Spotify API limitations. 
+                                    Audio feature analysis is currently unavailable due to Spotify API limitations.
                                     You can still view your top tracks, artists, and listening patterns below!
                                 </p>
                             </div>
@@ -742,20 +707,20 @@ function AnalyticsPage() {
 
                         {/* Genre Distribution Pie Chart */}
                         {getGenreDistribution().length > 0 && (
-                            <div className="section-card chart-card">
+                            <div className="section-card">
                                 <h2 className="section-title">
-                                    <span className="title-icon">🎭</span>
+                                    <Music size={24} />
                                     Genre Distribution
                                 </h2>
-                                <ResponsiveContainer width="100%" height={350}>
+                                <ResponsiveContainer width="100%" height={400}>
                                     <PieChart>
                                         <Pie
                                             data={getGenreDistribution()}
                                             cx="50%"
                                             cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                            outerRadius={100}
+                                            labelLine={true}
+                                            label={({ name, percentage }) => `${name}: ${percentage}%`}
+                                            outerRadius={120}
                                             fill="#1DB954"
                                             dataKey="value"
                                         >
@@ -763,9 +728,14 @@ function AnalyticsPage() {
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip 
-                                            contentStyle={{ backgroundColor: '#282828', border: '1px solid #1DB954', borderRadius: '8px' }}
-                                            labelStyle={{ color: '#fff' }}
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'white',
+                                                border: '2px solid #1DB954',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                            }}
+                                            labelStyle={{ color: '#181818', fontWeight: 'bold' }}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -773,7 +743,7 @@ function AnalyticsPage() {
                         )}
                     </div>
 
-                    {/* Top Artists Bar Chart */}
+                    {/* Top Artists Bar Chart
                     {getTopArtistsChartData().length > 0 && (
                         <div className="section-card full-width">
                             <h2 className="section-title">
@@ -800,7 +770,7 @@ function AnalyticsPage() {
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
-                    )}
+                    )} */}
 
                     {/* Top Artists */}
                     {dashboard.top_artists && dashboard.top_artists.length > 0 && (
@@ -867,7 +837,7 @@ function AnalyticsPage() {
                             <p className="section-description">
                                 Discovered patterns in your music using association rule mining
                             </p>
-                            
+
                             {associations.artist_associations.rules && (
                                 <div className="associations-container">
                                     <h3 className="subsection-title">Artist Connections</h3>
