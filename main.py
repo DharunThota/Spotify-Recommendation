@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from data_processor import DataProcessor
+from data_processor import create_data_processor
 from recommendation_engine import RecommendationEngine
 from explainability import ExplainabilityEngine
 import config
@@ -140,13 +140,26 @@ async def startup_event():
     global processor, rec_engine, explainer
     
     logger.info("Initializing recommendation system...")
-    processor = DataProcessor()
+    logger.info(f"Using {'PySpark' if config.USE_PYSPARK else 'Pandas'} for data processing")
+    
+    processor = create_data_processor()
     processor.initialize()
     
     rec_engine = RecommendationEngine(processor)
     explainer = ExplainabilityEngine(processor, rec_engine)
     
     logger.info("Recommendation system ready!")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup resources on shutdown."""
+    global processor
+    
+    logger.info("Shutting down recommendation system...")
+    if config.USE_PYSPARK and hasattr(processor, 'stop_spark'):
+        processor.stop_spark()
+    logger.info("Cleanup complete!")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -171,7 +184,8 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "total_songs": len(processor.data) if processor else 0,
+        "processing_engine": "PySpark" if config.USE_PYSPARK else "Pandas",
+        "total_songs": len(processor.data if hasattr(processor, 'data') else processor.data_pandas) if processor else 0,
         "moods_available": list(config.MOOD_CRITERIA.keys())
     }
 

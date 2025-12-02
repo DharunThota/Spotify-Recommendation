@@ -23,3 +23,4 @@ frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/package-lock.json
+.dist/
