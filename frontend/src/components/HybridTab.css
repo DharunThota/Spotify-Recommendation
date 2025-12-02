@@ -1,71 +1,178 @@
 .selected-songs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+    gap: var(--spacing-md);
+}
+
+/* Section Header with Toggle */
+.section-header-with-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+/* Toggle Switch Styles */
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    background: #e0e0e0;
+    border-radius: 50px;
+    transition: all var(--transition-base);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+    background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color var(--transition-base);
+}
+
+.toggle-switch input[type="checkbox"]:checked ~ .toggle-label {
+    color: #1DB954;
+}
+
+.toggle-icon {
+    font-size: 1.1rem;
+}
+
+.toggle-switch:hover .toggle-slider {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(29, 185, 84, 0.1);
 }
 
 .mood-filter {
     display: flex;
-    gap: 10px;
+    gap: var(--spacing-xs);
     flex-wrap: wrap;
 }
 
 .mood-filter-button {
-    padding: 10px 20px;
-    border: 1px solid var(--border-color);
-    background: var(--card-bg);
-    border-radius: 20px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: 2px solid transparent;
+    background: #f6f6f6;
+    border-radius: var(--radius-full);
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 600;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base) ease;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
 .mood-filter-button:hover:not(.active) {
-    background: var(--card-hover);
-    border-color: var(--accent-purple);
+    background: #efefef;
     color: var(--text-primary);
+    transform: scale(1.05);
 }
 
 .mood-filter-button.active {
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
     color: white;
     border-color: transparent;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+    font-weight: 700;
 }
 
 .mood-emoji-small {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .get-recommendations-button {
     width: 100%;
-    padding: 16px 32px;
-    background: linear-gradient(135deg, var(--spotify-green), var(--accent-purple));
+    padding: 18px var(--spacing-xl);
+    background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: 50px;
     color: white;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 800;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-md);
-    letter-spacing: 0.02em;
+    transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 24px rgba(29, 185, 84, 0.35);
+    letter-spacing: -0.01em;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.get-recommendations-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
 }
 
 .get-recommendations-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(29, 185, 84, 0.45);
+}
+
+.get-recommendations-button:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+.get-recommendations-button:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 .get-recommendations-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+    background: #888;
+    box-shadow: none;
 }
 
 @media (max-width: 768px) {
@@ -79,7 +186,23 @@
     
     .mood-filter-button {
         flex: 1;
-        min-width: 140px;
+        min-width: 120px;
         justify-content: center;
+    }
+    
+    .get-recommendations-button {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 0.9rem;
+    }
+    
+    .section-header-with-toggle {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .toggle-switch {
+        width: 100%;
+        justify-content: space-between;
+        padding: var(--spacing-sm) 0;
     }
 }
