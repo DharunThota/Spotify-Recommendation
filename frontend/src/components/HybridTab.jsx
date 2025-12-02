@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Smile, Wind, CloudRain, Zap, Flame } from 'lucide-react'
 import SongSearch from './SongSearch'
 import SongCard from './SongCard'
+import SongModal from './SongModal'
 import { getHybridRecommendations } from '../services/api'
 import './Tab.css'
 import './HybridTab.css'
@@ -13,6 +14,7 @@ function HybridTab() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
     const [popularOnly, setPopularOnly] = useState(false)
+    const [modalSong, setModalSong] = useState(null)
 
     const moods = [
         { id: 'happy', label: 'Happy', icon: Smile },
@@ -180,11 +182,15 @@ function HybridTab() {
                             <SongCard 
                                 key={rec.id || index}
                                 song={rec}
-                                showExplanation={true}
+                                onClick={setModalSong}
                             />
                         ))}
                     </div>
                 </div>
+            )}
+
+            {modalSong && (
+                <SongModal song={modalSong} onClose={() => setModalSong(null)} />
             )}
 
             {!isLoading && selectedSongs.length > 0 && recommendations.length === 0 && !error && (

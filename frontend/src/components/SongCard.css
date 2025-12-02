@@ -12,6 +12,14 @@
     overflow: hidden;
 }
 
+.song-card.clickable {
+    cursor: pointer;
+}
+
+.song-card.clickable:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
 .song-card::before {
     content: '';
     position: absolute;

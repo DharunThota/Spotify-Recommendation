@@ -2,9 +2,18 @@ import React from 'react'
 import { Calendar, TrendingUp, X } from 'lucide-react'
 import './SongCard.css'
 
-function SongCard({ song, showExplanation = false, onRemove = null }) {
+function SongCard({ song, showExplanation = false, onRemove = null, onClick = null }) {
+    const handleClick = () => {
+        if (onClick && !onRemove) {
+            onClick(song)
+        }
+    }
+
     return (
-        <div className="song-card">
+        <div 
+            className={`song-card ${onClick && !onRemove ? 'clickable' : ''}`}
+            onClick={handleClick}
+        >
             <div className="song-card-header">
                 <div className="song-card-info">
                     <h3 className="song-card-title">{song.name}</h3>
@@ -23,17 +32,17 @@ function SongCard({ song, showExplanation = false, onRemove = null }) {
                     </div>
                 </div>
                 {onRemove && (
-                    <button className="remove-button" onClick={onRemove}>
+                    <button 
+                        className="remove-button" 
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onRemove()
+                        }}
+                    >
                         <X size={16} />
                     </button>
                 )}
             </div>
-            
-            {showExplanation && song.explanation && (
-                <div className="song-card-explanation">
-                    <p>{song.explanation}</p>
-                </div>
-            )}
             
             {song.similarity_score !== undefined && (
                 <div className="song-card-score">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Smile, Wind, CloudRain, Zap, Flame } from 'lucide-react'
 import SongCard from './SongCard'
+import SongModal from './SongModal'
 import { getMoodRecommendations } from '../services/api'
 import './Tab.css'
 import './MoodBasedTab.css'
@@ -11,6 +12,7 @@ function MoodBasedTab() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
     const [popularOnly, setPopularOnly] = useState(false)
+    const [modalSong, setModalSong] = useState(null)
 
     const moods = [
         { id: 'happy', label: 'Happy', icon: Smile, color: '#FFD700' },
@@ -127,11 +129,15 @@ function MoodBasedTab() {
                             <SongCard 
                                 key={rec.id || index}
                                 song={rec}
-                                showExplanation={true}
+                                onClick={setModalSong}
                             />
                         ))}
                     </div>
                 </div>
+            )}
+
+            {modalSong && (
+                <SongModal song={modalSong} onClose={() => setModalSong(null)} />
             )}
 
             {!isLoading && selectedMood && recommendations.length === 0 && !error && (

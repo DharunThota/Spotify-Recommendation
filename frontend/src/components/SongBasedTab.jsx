@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import SongSearch from './SongSearch'
 import SongCard from './SongCard'
+import SongModal from './SongModal'
 import { getSongRecommendations } from '../services/api'
 import './Tab.css'
 
@@ -9,6 +10,7 @@ function SongBasedTab() {
     const [recommendations, setRecommendations] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [modalSong, setModalSong] = useState(null)
 
     const handleSongSelect = async (song) => {
         setSelectedSong(song)
@@ -77,11 +79,15 @@ function SongBasedTab() {
                             <SongCard 
                                 key={rec.id || index}
                                 song={rec}
-                                showExplanation={true}
+                                onClick={setModalSong}
                             />
                         ))}
                     </div>
                 </div>
+            )}
+
+            {modalSong && (
+                <SongModal song={modalSong} onClose={() => setModalSong(null)} />
             )}
 
             {!isLoading && selectedSong && recommendations.length === 0 && !error && (
