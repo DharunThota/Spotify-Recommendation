@@ -62,15 +62,15 @@ class ExplainabilityEngine:
             'common_attributes': common_attributes,
             'explanation': explanation_text,
             'input_song': {
-                'name': input_song['name'],
-                'artists': input_song['artists'],
-                'year': int(input_song['year'])
+                'name': str(input_song['name']),
+                'artists': str(input_song['artists']),
+                'year': int(float(input_song['year'])) if input_song['year'] else 0
             },
             'recommended_song': {
-                'name': recommended_song['name'],
-                'artists': recommended_song['artists'],
-                'year': int(recommended_song['year']),
-                'popularity': int(recommended_song['popularity'])
+                'name': str(recommended_song['name']),
+                'artists': str(recommended_song['artists']),
+                'year': int(float(recommended_song['year'])) if recommended_song['year'] else 0,
+                'popularity': int(float(recommended_song['popularity'])) if recommended_song['popularity'] else 0
             }
         }
     
@@ -114,10 +114,10 @@ class ExplainabilityEngine:
             'mood_features': mood_features,
             'explanation': explanation_text,
             'recommended_song': {
-                'name': recommended_song['name'],
-                'artists': recommended_song['artists'],
-                'year': int(recommended_song['year']),
-                'popularity': int(recommended_song['popularity'])
+                'name': str(recommended_song['name']),
+                'artists': str(recommended_song['artists']),
+                'year': int(float(recommended_song['year'])) if recommended_song['year'] else 0,
+                'popularity': int(float(recommended_song['popularity'])) if recommended_song['popularity'] else 0
             }
         }
     
@@ -205,8 +205,9 @@ class ExplainabilityEngine:
         
         for feature in config.AUDIO_FEATURES:
             if feature in song1 and feature in song2:
-                val1 = song1[feature]
-                val2 = song2[feature]
+                # Ensure values are floats for numeric operations
+                val1 = float(song1[feature]) if song1[feature] else 0.0
+                val2 = float(song2[feature]) if song2[feature] else 0.0
                 
                 # Calculate similarity (normalized difference)
                 if feature == 'tempo':
@@ -253,10 +254,12 @@ class ExplainabilityEngine:
         if song1['cluster'] == song2['cluster']:
             common['cluster'] = int(song1['cluster'])
         
-        # Check for similar year
-        year_diff = abs(song1['year'] - song2['year'])
+        # Check for similar year (ensure type conversion)
+        year1 = int(float(song1['year'])) if song1['year'] else 0
+        year2 = int(float(song2['year'])) if song2['year'] else 0
+        year_diff = abs(year1 - year2)
         if year_diff <= 5:
-            common['era'] = f"{song1['year']}s era"
+            common['era'] = f"{year1}s era"
         
         # Check for similar mode and key
         if song1['mode'] == song2['mode']:
@@ -279,7 +282,8 @@ class ExplainabilityEngine:
         
         for feature, (min_val, max_val) in criteria.items():
             if feature in song:
-                value = song[feature]
+                # Ensure value is a float for numeric operations
+                value = float(song[feature]) if song[feature] else 0.0
                 
                 # Check if in range
                 in_range = min_val <= value <= max_val
@@ -343,9 +347,10 @@ class ExplainabilityEngine:
                 parts.append(f"They have similar {features_str}.")
         
         # Popularity note
-        if recommended_song['popularity'] > 70:
+        popularity = int(float(recommended_song['popularity'])) if recommended_song.get('popularity') else 0
+        if popularity > 70:
             parts.append("This is a popular track that many users enjoy.")
-        elif recommended_song['popularity'] < 30:
+        elif popularity < 30:
             parts.append("This is a hidden gem you might not have discovered yet.")
         
         return ' '.join(parts)

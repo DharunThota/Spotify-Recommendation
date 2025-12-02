@@ -315,6 +315,7 @@ async def recommend_by_song(request: SongRecommendationRequest):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error in song-based recommendations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
