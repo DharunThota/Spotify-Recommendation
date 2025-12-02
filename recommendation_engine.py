@@ -179,10 +179,22 @@ class RecommendationEngine:
         # Sort by mood score
         mood_scores.sort(key=lambda x: x[1], reverse=True)
         
-        # Apply diversity (different artists, clusters)
+        # Take top candidates for diversity filtering
+        top_candidates = mood_scores[:n_recommendations * 3]
+        
+        # Apply clustering-based diversity for better variety
+        if len(top_candidates) > n_recommendations:
+            diverse_recommendations = self._cluster_based_diversity(
+                top_candidates,
+                n_recommendations * 2
+            )
+        else:
+            diverse_recommendations = top_candidates
+        
+        # Apply artist diversity filter
         diverse_recommendations = self._apply_diversity_filter(
-            mood_scores,
-            n_recommendations * 2,
+            diverse_recommendations,
+            n_recommendations,
             diversity_weight=0.8
         )
         
@@ -237,40 +249,110 @@ class RecommendationEngine:
         return aggregated[:n_recommendations]
     
     def _calculate_mood_fit(self, song: dict, mood: str) -> float:
-        """Calculate how well a song fits a mood."""
+        """
+        Calculate how well a song fits a mood using weighted feature scoring.
+        
+        Args:
+            song: Song dictionary with audio features
+            mood: Target mood
+            
+        Returns:
+            Weighted mood fit score (0.0 to 1.0+)
+        """
         criteria = config.MOOD_CRITERIA[mood]
+        feature_weights = config.MOOD_FEATURE_WEIGHTS.get(mood, {})
         
         fit_score = 0.0
-        num_criteria = len(criteria)
+        total_weight = 0.0
         
         for feature, (min_val, max_val) in criteria.items():
-            if feature in song:
-                try:
-                    value = float(song[feature]) if song[feature] is not None else 0.0
-                except (ValueError, TypeError):
-                    logger.warning(f"Invalid value for feature {feature}: {song.get(feature)}")
-                    continue
+            if feature not in song:
+                continue
                 
-                # Calculate how well value fits in range
-                range_size = max_val - min_val
-                if min_val <= value <= max_val:
-                    # Value is in range - calculate position in range
-                    center = (min_val + max_val) / 2
-                    distance_from_center = abs(value - center)
-                    normalized_distance = distance_from_center / (range_size / 2)
-                    fit_score += (1.0 - normalized_distance)
+            try:
+                value = float(song[feature]) if song[feature] is not None else 0.0
+            except (ValueError, TypeError):
+                logger.warning(f"Invalid value for feature {feature}: {song.get(feature)}")
+                continue
+            
+            # Get feature weight (default to 1.0 if not specified)
+            weight = feature_weights.get(feature, 1.0)
+            total_weight += weight
+            
+            # Calculate how well value fits in range
+            range_size = max_val - min_val
+            if range_size == 0:
+                range_size = 0.01  # Avoid division by zero
+            
+            if min_val <= value <= max_val:
+                # Value is in range - calculate position in range
+                center = (min_val + max_val) / 2
+                distance_from_center = abs(value - center)
+                normalized_distance = distance_from_center / (range_size / 2)
+                
+                # Gaussian-like scoring: closer to center = higher score
+                feature_score = 1.0 - (normalized_distance ** 2 * 0.5)
+                fit_score += feature_score * weight
+            else:
+                # Value is out of range - apply penalty based on distance
+                if value < min_val:
+                    distance = min_val - value
                 else:
-                    # Value is out of range - penalty based on distance
-                    if value < min_val:
-                        distance = min_val - value
-                    else:
-                        distance = value - max_val
-                    
-                    # Normalize distance (penalty decreases with distance)
-                    penalty = max(0, 1.0 - (distance / range_size))
-                    fit_score += penalty * 0.3
+                    distance = value - max_val
+                
+                # Exponential decay penalty (further = lower score)
+                normalized_distance = min(distance / range_size, 2.0)
+                penalty_score = max(0, 0.5 - (normalized_distance ** 2 * 0.25))
+                fit_score += penalty_score * weight
         
-        return fit_score / num_criteria if num_criteria > 0 else 0.0
+        # Normalize by total weight
+        return fit_score / total_weight if total_weight > 0 else 0.0
+    
+    def _cluster_based_diversity(
+        self,
+        candidates: List[Tuple[int, float]],
+        n_recommendations: int
+    ) -> List[Tuple[int, float]]:
+        """
+        Select diverse songs from different clusters to ensure sonic variety.
+        Uses round-robin selection from cluster groups.
+        """
+        if not candidates:
+            return []
+        
+        # Group by cluster
+        cluster_groups = {}
+        for idx, score in candidates:
+            song = self.processor.get_song_by_index(idx)
+            cluster = song.get('cluster', 0)
+            
+            if cluster not in cluster_groups:
+                cluster_groups[cluster] = []
+            cluster_groups[cluster].append((idx, score))
+        
+        # Sort each cluster by score
+        for cluster in cluster_groups:
+            cluster_groups[cluster].sort(key=lambda x: x[1], reverse=True)
+        
+        # Round-robin selection from clusters
+        selected = []
+        cluster_ids = list(cluster_groups.keys())
+        cluster_idx = 0
+        
+        while len(selected) < n_recommendations and cluster_groups:
+            if not cluster_ids:
+                break
+                
+            current_cluster = cluster_ids[cluster_idx % len(cluster_ids)]
+            
+            if cluster_groups[current_cluster]:
+                selected.append(cluster_groups[current_cluster].pop(0))
+            else:
+                cluster_ids.remove(current_cluster)
+            
+            cluster_idx += 1
+        
+        return selected
     
     def _apply_diversity_filter(
         self, 

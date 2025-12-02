@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Smile, Wind, CloudRain, Zap, Flame } from 'lucide-react'
+import { Smile, Wind, CloudRain, Zap, Heart, Brain, PartyPopper, CloudSnow } from 'lucide-react'
 import SongSearch from './SongSearch'
 import SongCard from './SongCard'
 import SongModal from './SongModal'
@@ -21,7 +21,11 @@ function HybridTab() {
         { id: 'happy', label: 'Happy', icon: Smile },
         { id: 'chill', label: 'Chill', icon: Wind },
         { id: 'sad', label: 'Sad', icon: CloudRain },
-        { id: 'energetic', label: 'Energetic', icon: Zap }
+        { id: 'energetic', label: 'Energetic', icon: Zap },
+        { id: 'romantic', label: 'Romantic', icon: Heart },
+        { id: 'focus', label: 'Focus', icon: Brain },
+        { id: 'party', label: 'Party', icon: PartyPopper },
+        { id: 'melancholic', label: 'Melancholic', icon: CloudSnow }
     ]
 
     const handleSongSelect = (song) => {

@@ -12,7 +12,7 @@ function HomePage({ onGetStarted, onNavigate }) {
         {
             icon: Heart,
             title: 'Mood-Based Discovery',
-            description: 'Explore music that matches your current mood - happy, sad, energetic, or chill vibes.'
+            description: 'Explore music for any mood - happy, chill, sad, energetic, romantic, focus, party, or melancholic vibes.'
         },
         {
             icon: Star,

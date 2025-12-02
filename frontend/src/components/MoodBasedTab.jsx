@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Smile, Wind, CloudRain, Zap, Flame } from 'lucide-react'
+import { Smile, Wind, CloudRain, Zap, Heart, Brain, PartyPopper, CloudSnow } from 'lucide-react'
 import SongCard from './SongCard'
 import SongModal from './SongModal'
 import { getMoodRecommendations } from '../services/api'
@@ -19,7 +19,11 @@ function MoodBasedTab() {
         { id: 'happy', label: 'Happy', icon: Smile, color: '#FFD700' },
         { id: 'chill', label: 'Chill', icon: Wind, color: '#87CEEB' },
         { id: 'sad', label: 'Sad', icon: CloudRain, color: '#9370DB' },
-        { id: 'energetic', label: 'Energetic', icon: Zap, color: '#FF6347' }
+        { id: 'energetic', label: 'Energetic', icon: Zap, color: '#FF6347' },
+        { id: 'romantic', label: 'Romantic', icon: Heart, color: '#FF69B4' },
+        { id: 'focus', label: 'Focus', icon: Brain, color: '#4169E1' },
+        { id: 'party', label: 'Party', icon: PartyPopper, color: '#FF1493' },
+        { id: 'melancholic', label: 'Melancholic', icon: CloudSnow, color: '#708090' }
     ]
 
     const handleMoodSelect = async (mood, isPopular = popularOnly) => {

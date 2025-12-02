@@ -27,27 +27,84 @@ AUDIO_FEATURES = [
 ]
 
 # Mood definitions based on audio features
+# Each mood now includes weighted features for better matching
 MOOD_CRITERIA = {
     "happy": {
         "valence": (0.6, 1.0),
         "energy": (0.5, 1.0),
-        "danceability": (0.5, 1.0)
+        "danceability": (0.5, 1.0),
+        "tempo": (100, 180),
+        "acousticness": (0.0, 0.5),  # Less acoustic = more upbeat
+        "speechiness": (0.0, 0.3)     # Less speech = more musical
     },
     "chill": {
         "energy": (0.0, 0.5),
-        "tempo": (0, 100),
-        "acousticness": (0.4, 1.0)
+        "tempo": (60, 120),
+        "acousticness": (0.4, 1.0),
+        "valence": (0.3, 0.7),        # Neutral to slightly positive
+        "instrumentalness": (0.3, 1.0), # More instrumental
+        "loudness": (-20, -8)          # Quieter songs
     },
     "sad": {
         "valence": (0.0, 0.4),
         "energy": (0.0, 0.5),
-        "acousticness": (0.3, 1.0)
+        "acousticness": (0.3, 1.0),
+        "tempo": (60, 100),            # Slower tempo
+        "instrumentalness": (0.0, 0.7),
+        "loudness": (-20, -6)
     },
     "energetic": {
         "energy": (0.7, 1.0),
-        "tempo": (120, 250),
-        "danceability": (0.6, 1.0)
+        "tempo": (120, 200),
+        "danceability": (0.6, 1.0),
+        "valence": (0.4, 1.0),
+        "loudness": (-8, 0),            # Louder songs
+        "speechiness": (0.0, 0.3)
+    },
+    "romantic": {
+        "valence": (0.4, 0.8),
+        "energy": (0.2, 0.6),
+        "acousticness": (0.3, 0.9),
+        "tempo": (70, 120),
+        "instrumentalness": (0.0, 0.4),
+        "danceability": (0.3, 0.7)
+    },
+    "focus": {
+        "energy": (0.3, 0.7),
+        "instrumentalness": (0.5, 1.0),  # Highly instrumental
+        "speechiness": (0.0, 0.2),       # Minimal vocals
+        "tempo": (80, 130),
+        "valence": (0.3, 0.7),
+        "acousticness": (0.2, 0.8)
+    },
+    "party": {
+        "energy": (0.7, 1.0),
+        "danceability": (0.7, 1.0),
+        "valence": (0.6, 1.0),
+        "tempo": (120, 180),
+        "loudness": (-6, 0),
+        "acousticness": (0.0, 0.3)
+    },
+    "melancholic": {
+        "valence": (0.1, 0.4),
+        "energy": (0.2, 0.5),
+        "acousticness": (0.4, 1.0),
+        "tempo": (60, 100),
+        "instrumentalness": (0.2, 0.8),
+        "loudness": (-18, -8)
     }
+}
+
+# Feature weights for mood matching (higher = more important)
+MOOD_FEATURE_WEIGHTS = {
+    "happy": {"valence": 2.0, "energy": 1.5, "danceability": 1.3},
+    "chill": {"energy": 2.0, "acousticness": 1.5, "tempo": 1.3},
+    "sad": {"valence": 2.0, "energy": 1.5, "acousticness": 1.2},
+    "energetic": {"energy": 2.0, "tempo": 1.5, "danceability": 1.3},
+    "romantic": {"valence": 1.5, "acousticness": 1.3, "energy": 1.2},
+    "focus": {"instrumentalness": 2.0, "speechiness": 1.8, "energy": 1.2},
+    "party": {"danceability": 2.0, "energy": 1.8, "valence": 1.5},
+    "melancholic": {"valence": 2.0, "energy": 1.5, "acousticness": 1.3}
 }
 
 # Spotify API Configuration

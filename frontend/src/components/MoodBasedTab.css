@@ -1,7 +1,9 @@
 .mood-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 /* Toggle Switch for Popular Songs */
@@ -197,10 +199,11 @@
     font-size: 1.05rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .mood-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-sm);
+        max-width: 500px;
     }
     
     .mood-button {
